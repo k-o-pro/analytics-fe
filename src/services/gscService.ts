@@ -67,7 +67,7 @@ export const gscService = {
   getAuthUrl: (): string => {
     const baseUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
     const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-    const redirectUri = `${window.location.origin}/oauth-callback`;
+    const redirectUri = `${window.location.origin}/#/oauth-callback`;
     
     const params = new URLSearchParams({
       client_id: clientId || '',
