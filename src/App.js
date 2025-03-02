@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { useAuth } from './contexts/AuthContext';
-import PrivateRoute from './components/PrivateRoute';
+import PrivateRoute from './components/auth/PrivateRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
