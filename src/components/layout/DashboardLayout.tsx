@@ -35,7 +35,7 @@ import CreditBadge from '../dashboard/CreditBadge';
 
 const drawerWidth = 240;
 
-const DashboardLayout: React.FC = () => {
+const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const theme = useTheme();
@@ -198,7 +198,7 @@ const DashboardLayout: React.FC = () => {
         }}
       >
         <Container maxWidth="lg">
-          <Outlet />
+          {children || <Outlet />}
         </Container>
       </Box>
     </Box>
