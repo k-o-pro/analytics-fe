@@ -147,7 +147,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
             <DatePicker
               label="Start Date"
               value={startDate}
-              onChange={(newValue) => {
+              onChange={(newValue: Date) => {
                 setStartDate(newValue);
                 setError(null);
               }}
