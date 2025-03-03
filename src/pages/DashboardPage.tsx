@@ -99,20 +99,6 @@ const DashboardPage: React.FC = () => {
     position: 0
   });
 
-  // Initialize date ranges
-  useEffect(() => {
-    const ranges = gscService.getDateRanges();
-    setDateRanges(ranges);
-    setSelectedRange(ranges[1]); // Default to 30 days
-  }, []);
-
-  // Fetch data when property or date range changes
-  useEffect(() => {
-    if (selectedProperty && selectedRange.startDate && selectedRange.endDate) {
-      fetchPerformanceData();
-    }
-  }, [selectedProperty, selectedRange, fetchPerformanceData]); // Add fetchPerformanceData
-
   const fetchPerformanceData = async () => {
     try {
       setLoading(true);
@@ -143,6 +129,21 @@ const DashboardPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Initialize date ranges
+  useEffect(() => {
+    const ranges = gscService.getDateRanges();
+    setDateRanges(ranges);
+    setSelectedRange(ranges[1]); // Default to 30 days
+  }, []);
+
+  // Fetch data when property or date range changes
+  useEffect(() => {
+    if (selectedProperty && selectedRange.startDate && selectedRange.endDate) {
+      fetchPerformanceData();
+    }
+  }, [selectedProperty, selectedRange, fetchPerformanceData]); // Add fetchPerformanceData
+  
 
   const handlePropertyChange = (property: string) => {
     setSelectedProperty(property);
