@@ -22,7 +22,7 @@ import {
 import {
   Add as AddIcon,
   Refresh as RefreshIcon,
-  DefaultIcon
+  StarOutline as DefaultIcon
 } from '@mui/icons-material';
 import { gscService } from '../services/gscService';
 import { useAuth } from '../contexts/AuthContext';
