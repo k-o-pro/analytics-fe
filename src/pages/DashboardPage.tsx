@@ -103,14 +103,23 @@ const DashboardPage: React.FC = () => {
       setLoading(true);
       setError(null);
   
-      const mockData = generateMockData(selectedRange.startDate, selectedRange.endDate);
-      setPerformanceData(mockData);
+      // Get previous period date range
+      const { startDate: prevStartDate, endDate: prevEndDate } = 
+        gscService.getPreviousPeriod(selectedRange.startDate, selectedRange.endDate);
+  
+      // Generate data for current period
+      const currentData = generateMockData(selectedRange.startDate, selectedRange.endDate);
+      setPerformanceData(currentData);
       
-      const metrics = calculateSummaryMetrics(mockData);
-      setSummaryMetrics(metrics);
+      // Generate data for previous period
+      const previousData = generateMockData(prevStartDate, prevEndDate);
       
-      const prevMetrics = calculateSummaryMetrics(prevData);
-      setPreviousSummaryMetrics(prevMetrics);
+      // Calculate metrics for both periods
+      const currentMetrics = calculateSummaryMetrics(currentData);
+      const previousMetrics = calculateSummaryMetrics(previousData);
+      
+      setSummaryMetrics(currentMetrics);
+      setPreviousSummaryMetrics(previousMetrics);
       
     } catch (err) {
       console.error('Failed to fetch performance data:', err);
