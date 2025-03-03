@@ -11,6 +11,7 @@ import {
   Divider 
 } from '@mui/material';
 import { DatePicker } from '@mui/lab';
+import { TextFieldProps } from '@mui/material';
 import { CalendarToday as CalendarIcon } from '@mui/icons-material';
 import { format, isValid, isAfter, isBefore, parseISO } from 'date-fns';
 import { DateRange } from '../../services/gscService';
@@ -144,28 +145,28 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
           </Divider>
 
           <Stack spacing={2}>
-            <DatePicker
-              label="Start Date"
-              value={startDate}
-              onChange={(newValue: Date) => {
-                setStartDate(newValue);
-                setError(null);
-              }}
-              renderInput={(params) => <TextField size="small" {...params} fullWidth />}
-              maxDate={endDate || undefined}
-            />
+          <DatePicker
+            label="Start Date"
+            value={startDate}
+            onChange={(newValue: Date) => {
+              setStartDate(newValue);
+              setError(null);
+            }}
+            renderInput={(params: TextFieldProps) => <TextField size="small" {...params} fullWidth />}
+            maxDate={endDate || undefined}
+          />
 
-            <DatePicker
-              label="End Date"
-              value={endDate}
-              onChange={(newValue) => {
-                setEndDate(newValue);
-                setError(null);
-              }}
-              renderInput={(params) => <TextField size="small" {...params} fullWidth />}
-              minDate={startDate || undefined}
-              maxDate={new Date()}
-            />
+          <DatePicker
+            label="End Date"
+            value={endDate}
+            onChange={(newValue: Date) => {
+              setEndDate(newValue);
+              setError(null);
+            }}
+            renderInput={(params: TextFieldProps) => <TextField size="small" {...params} fullWidth />}
+            minDate={startDate || undefined}
+            maxDate={new Date()}
+          />
 
             {error && (
               <Typography color="error" variant="body2">
