@@ -13,7 +13,7 @@ import {
 import { DatePicker } from '@mui/lab';
 import { TextFieldProps } from '@mui/material';
 import { CalendarToday as CalendarIcon } from '@mui/icons-material';
-import { format, isValid, isAfter, isBefore, parseISO } from 'date-fns';
+import { format, isValid, isAfter, parseISO } from 'date-fns';
 import { DateRange } from '../../services/gscService';
 
 interface DateRangePickerProps {

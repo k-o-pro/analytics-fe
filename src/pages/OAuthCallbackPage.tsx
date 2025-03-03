@@ -23,7 +23,6 @@ const OAuthCallbackPage: React.FC = () => {
         // Get code from URL parameters
         const queryParams = new URLSearchParams(location.search);
         const code = queryParams.get('code');
-        const state = queryParams.get('state');
 
         if (!code) {
           throw new Error('No authorization code found in the URL');

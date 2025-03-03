@@ -8,18 +8,15 @@ import {
   Typography,
   Divider,
   List,
-  ListItem,
   ListItemIcon,
   ListItemText,
   ListItemButton,
   IconButton,
   Container,
-  Avatar,
   Menu,
   MenuItem,
   useMediaQuery,
-  useTheme,
-  Chip
+  useTheme
 } from '@mui/material';
 import {
   Menu as MenuIcon,

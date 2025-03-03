@@ -123,7 +123,7 @@ const TopPagesPage: React.FC = () => {
     if (selectedProperty && selectedRange.startDate && selectedRange.endDate) {
       fetchTopPages();
     }
-  }, [selectedProperty, selectedRange, page, rowsPerPage]);
+  }, [selectedProperty, selectedRange, page, rowsPerPage, fetchTopPages]); // Add fetchTopPages
 
   const fetchUserCredits = async () => {
     try {

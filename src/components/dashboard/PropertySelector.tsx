@@ -31,7 +31,7 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
 
   useEffect(() => {
     fetchProperties();
-  }, []);
+  }, [fetchProperties]); // Add fetchProperties to dependencies
 
   const fetchProperties = async () => {
     try {

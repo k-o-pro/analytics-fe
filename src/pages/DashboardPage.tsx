@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Grid, Box, Typography, Paper, Skeleton, Alert, Button, Divider } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { format, parseISO, subDays } from 'date-fns';
+import { format } from 'date-fns';
 
 import PropertySelector from '../components/dashboard/PropertySelector';
 import DateRangePicker from '../components/dashboard/DateRangePicker';
 import MetricCard from '../components/visualizations/MetricCard';
 import PerformanceChart from '../components/visualizations/PerformanceChart';
-import { gscService, DateRange, GSCMetricsRequest, GSCResponse } from '../services/gscService';
+import { gscService, DateRange } from '../services/gscService';
 
 // Generate mock data for demo purposes
 const generateMockData = (startDate: string, endDate: string, seed = 1) => {
@@ -111,7 +111,7 @@ const DashboardPage: React.FC = () => {
     if (selectedProperty && selectedRange.startDate && selectedRange.endDate) {
       fetchPerformanceData();
     }
-  }, [selectedProperty, selectedRange]);
+  }, [selectedProperty, selectedRange, fetchPerformanceData]); // Add fetchPerformanceData
 
   const fetchPerformanceData = async () => {
     try {
