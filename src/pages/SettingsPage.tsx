@@ -48,18 +48,6 @@ const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  useEffect(() => {
-    // Check for messages from navigation state
-    const state = location.state as LocationState;
-    if (state?.message) {
-      setMessage({ text: state.message, type: 'success' });
-      // Clear the location state
-      navigate(location.pathname, { replace: true });
-    }
-
-    fetchProperties();
-  }, [location, navigate, fetchProperties]);
-
   const fetchProperties = useCallback(async () => {
     try {
       setLoading(true);
@@ -82,6 +70,18 @@ const SettingsPage: React.FC = () => {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    // Check for messages from navigation state
+    const state = location.state as LocationState;
+    if (state?.message) {
+      setMessage({ text: state.message, type: 'success' });
+      // Clear the location state
+      navigate(location.pathname, { replace: true });
+    }
+
+    fetchProperties();
+  }, [location, navigate, fetchProperties]);
 
   const handleConnectGSC = () => {
     navigate('/connect-gsc');

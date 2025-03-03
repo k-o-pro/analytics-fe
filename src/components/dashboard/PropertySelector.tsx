@@ -29,10 +29,6 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchProperties();
-  }, [fetchProperties]); // Add fetchProperties to dependencies
-
   const fetchProperties = async () => {
     try {
       setLoading(true);
@@ -51,6 +47,10 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchProperties();
+  }, []); // Empty dependency array to run only once
 
   const handlePropertyChange = (event: SelectChangeEvent) => {
     onPropertyChange(event.target.value);
