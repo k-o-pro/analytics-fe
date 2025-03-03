@@ -11,6 +11,7 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  ListItemButton,
   IconButton,
   Container,
   Avatar,
@@ -76,19 +77,18 @@ const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children })
       </Toolbar>
       <Divider />
       <List>
-        {menuItems.map((item) => (
-          <ListItem
-            button
-            component={Link}
-            to={item.path}
-            key={item.path}
-            selected={location.pathname === item.path}
-            onClick={isMobile ? handleDrawerToggle : undefined}
-          >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.text} />
-          </ListItem>
-        ))}
+      {menuItems.map((item) => (
+        <ListItemButton
+          component={Link}
+          to={item.path}
+          key={item.path}
+          selected={location.pathname === item.path}
+          onClick={isMobile ? handleDrawerToggle : undefined}
+        >
+          <ListItemIcon>{item.icon}</ListItemIcon>
+          <ListItemText primary={item.text} />
+        </ListItemButton>
+      ))}
       </List>
       <Divider />
       <Box sx={{ p: 2, mt: 'auto' }}>
