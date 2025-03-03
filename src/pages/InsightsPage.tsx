@@ -24,7 +24,12 @@ import {
   TrendingDown,
   TrendingFlat,
   Lightbulb as LightbulbIcon,
-  Info as InfoIcon
+  Info as InfoIcon,
+  ArrowUpward,
+  ArrowForward,
+  ArrowDownward,
+  CheckCircle as CheckCircleIcon,
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
 
 import PropertySelector from '../components/dashboard/PropertySelector';
