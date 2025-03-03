@@ -109,31 +109,6 @@ const TopPagesPage: React.FC = () => {
   const [credits, setCredits] = useState(0);
   const [showPremiumAlert, setShowPremiumAlert] = useState(false);
 
-  // Initialize date ranges and fetch user credits
-  useEffect(() => {
-    const ranges = gscService.getDateRanges();
-    setDateRanges(ranges);
-    setSelectedRange(ranges[1]); // Default to 30 days
-    
-    fetchUserCredits();
-  }, []);
-
-  // Fetch data when property or date range changes
-  useEffect(() => {
-    if (selectedProperty && selectedRange.startDate && selectedRange.endDate) {
-      fetchTopPages();
-    }
-  }, [selectedProperty, selectedRange, page, rowsPerPage, fetchTopPages]); // Add fetchTopPages
-
-  const fetchUserCredits = async () => {
-    try {
-      const userCredits = await creditsService.getCredits();
-      setCredits(userCredits);
-    } catch (error) {
-      console.error('Failed to fetch user credits:', error);
-    }
-  };
-
   const fetchTopPages = async () => {
     try {
       setLoading(true);
@@ -161,6 +136,31 @@ const TopPagesPage: React.FC = () => {
       setError('Failed to load top pages data. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Initialize date ranges and fetch user credits
+  useEffect(() => {
+    const ranges = gscService.getDateRanges();
+    setDateRanges(ranges);
+    setSelectedRange(ranges[1]); // Default to 30 days
+    
+    fetchUserCredits();
+  }, []);
+
+  // Fetch data when property or date range changes
+  useEffect(() => {
+    if (selectedProperty && selectedRange.startDate && selectedRange.endDate) {
+      fetchTopPages();
+    }
+  }, [selectedProperty, selectedRange, page, rowsPerPage, fetchTopPages]);
+
+  const fetchUserCredits = async () => {
+    try {
+      const userCredits = await creditsService.getCredits();
+      setCredits(userCredits);
+    } catch (error) {
+      console.error('Failed to fetch user credits:', error);
     }
   };
 
