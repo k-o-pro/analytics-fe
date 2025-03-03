@@ -50,7 +50,7 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
 
   useEffect(() => {
     fetchProperties();
-  }, []); // Empty dependency array to run only once
+  }, [fetchProperties]); // Add fetchProperties to dependency array
 
   const handlePropertyChange = (event: SelectChangeEvent) => {
     onPropertyChange(event.target.value);

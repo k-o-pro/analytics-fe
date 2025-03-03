@@ -35,7 +35,7 @@ import {
 import PropertySelector from '../components/dashboard/PropertySelector';
 import DateRangePicker from '../components/dashboard/DateRangePicker';
 import { gscService, DateRange } from '../services/gscService';
-import { insightsService, InsightResponse, Finding, Recommendation } from '../services/insightsService';
+import { InsightResponse, } from '../services/insightsService';
 import { creditsService } from '../services/creditsService';
 
 // Mock function to generate insights
@@ -91,7 +91,6 @@ const generateMockInsights = (): InsightResponse => {
 
 const InsightsPage: React.FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const theme = useTheme();
   const [selectedProperty, setSelectedProperty] = useState('');
   const [dateRanges, setDateRanges] = useState<DateRange[]>([]);

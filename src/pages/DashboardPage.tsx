@@ -85,7 +85,6 @@ const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [performanceData, setPerformanceData] = useState<any[]>([]);
-  const [previousPeriodData, setPreviousPeriodData] = useState<any[]>([]);
   const [summaryMetrics, setSummaryMetrics] = useState({
     clicks: 0,
     impressions: 0,
@@ -109,10 +108,6 @@ const DashboardPage: React.FC = () => {
       
       const metrics = calculateSummaryMetrics(mockData);
       setSummaryMetrics(metrics);
-      
-      const prevPeriod = gscService.getPreviousPeriod(selectedRange.startDate, selectedRange.endDate);
-      const prevData = generateMockData(prevPeriod.startDate, prevPeriod.endDate, 0.9);
-      setPreviousPeriodData(prevData);
       
       const prevMetrics = calculateSummaryMetrics(prevData);
       setPreviousSummaryMetrics(prevMetrics);

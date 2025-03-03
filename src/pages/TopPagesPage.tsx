@@ -23,7 +23,7 @@ import {
   TrendingDown,
   TrendingFlat,
   Lightbulb as InsightIcon,
-  BarChart as AnalyzeIcon,
+  BarChart, 
   OpenInNew as ExternalLinkIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
