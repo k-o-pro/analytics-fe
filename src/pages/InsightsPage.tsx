@@ -16,7 +16,8 @@ import {
   ListItemIcon,
   ListItemText,
   Tooltip,
-  useTheme
+  useTheme,
+  Chip
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
