@@ -3,6 +3,14 @@ import jwtDecode from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 
+interface LoginResponse {
+  token: string;
+}
+
+interface RefreshResponse {
+  token: string;
+}
+
 type User = {
   user_id: number;
   email: string;
@@ -63,7 +71,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post<LoginResponse>('/auth/login', { email, password });
       const { token } = response.data;
       
       localStorage.setItem('token', token);
@@ -87,7 +95,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
 
   const refreshToken = async (): Promise<boolean> => {
     try {
-      const response = await api.post('/auth/refresh');
+      const response = await api.post<RefreshResponse>('/auth/refresh');
       const { token } = response.data;
       
       localStorage.setItem('token', token);
