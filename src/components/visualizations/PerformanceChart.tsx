@@ -93,17 +93,18 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
       case 'ctr':
         return {
           tickFormatter: (value: number) => `${(value * 100).toFixed(0)}%`,
-          domain: [0, (dataMax: number) => Math.min(Math.ceil(dataMax * 1.1 * 100) / 100, 1)],
+          // Change domain to match AxisDomain type
+          domain: [0, (dataMax: number) => Math.min(Math.ceil(dataMax * 1.1 * 100) / 100, 1)] as [number, (dataMax: number) => number],
         };
       case 'position':
         return {
-          // Position is reversed (lower is better)
-          domain: [(dataMin: number) => Math.floor(dataMin * 0.9), (dataMax: number) => Math.ceil(dataMax * 1.1)],
+          // Change domain to match AxisDomain type
+          domain: [(dataMin: number) => Math.floor(dataMin * 0.9), (dataMax: number) => Math.ceil(dataMax * 1.1)] as [(dataMin: number) => number, (dataMax: number) => number],
           reversed: true,
         };
       default:
         return {
-          tickFormatter: (value: number) => (value >= 1000 ? `${value / 1000}k` : value),
+          tickFormatter: (value: number) => (value >= 1000 ? `${value / 1000}k` : value.toString()),
         };
     }
   };
