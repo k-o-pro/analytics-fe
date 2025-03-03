@@ -59,10 +59,10 @@ const calculateSummaryMetrics = (data: any[]) => {
     acc.impressions += day.impressions;
     acc.positions.push(day.position);
     return acc;
-  }, { clicks: 0, impressions: 0, positions: [] });
+  }, { clicks: 0, impressions: 0, positions: [] as number[] });
   
-  // Calculate averages
-  const avgPosition = totals.positions.reduce((sum, pos) => sum + pos, 0) / totals.positions.length;
+  // Add type annotation for the sum parameter
+  const avgPosition = totals.positions.reduce((sum: number, pos: number) => sum + pos, 0) / totals.positions.length;
   const ctr = totals.clicks / totals.impressions;
   
   return {
