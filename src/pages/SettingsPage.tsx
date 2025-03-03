@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -58,19 +58,17 @@ const SettingsPage: React.FC = () => {
     }
 
     fetchProperties();
-  }, [location, navigate]);
+  }, [location, navigate, fetchProperties]);
 
-  const fetchProperties = async () => {
+  const fetchProperties = useCallback(async () => {
     try {
       setLoading(true);
       const gscProperties = await gscService.getProperties();
       
-      // In a real app, you'd likely have an API to get which properties are connected
-      // For this MVP, we'll simulate this data
       const connectedProperties = gscProperties.map(property => ({
         ...property,
-        isConnected: Math.random() > 0.3, // Randomly mark some as connected for demo
-        isDefault: property.siteUrl.includes('example.com') // Just for demo purposes
+        isConnected: Math.random() > 0.3,
+        isDefault: property.siteUrl.includes('example.com')
       }));
       
       setProperties(connectedProperties);
@@ -83,7 +81,7 @@ const SettingsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleConnectGSC = () => {
     navigate('/connect-gsc');
