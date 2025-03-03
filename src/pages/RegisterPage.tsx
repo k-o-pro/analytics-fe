@@ -13,6 +13,11 @@ import {
 } from '@mui/material';
 import { api } from '../services/api';
 
+interface RegistrationResponse {
+  success: boolean;
+  message?: string;
+}
+
 const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -41,7 +46,7 @@ const RegisterPage: React.FC = () => {
       setLoading(true);
       
       // Call the registration API
-      const response = await api.post('/auth/register', {
+      const response = await api.post<RegistrationResponse>('/auth/register', {
         name,
         email,
         password
