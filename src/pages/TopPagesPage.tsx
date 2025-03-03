@@ -22,8 +22,7 @@ import {
   TrendingUp,
   TrendingDown,
   TrendingFlat,
-  Lightbulb as InsightIcon,
-  BarChart, 
+  Lightbulb as InsightIcon, 
   OpenInNew as ExternalLinkIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -69,7 +68,6 @@ const generateMockTopPages = (startDate: string, endDate: string, count = 20): T
     const position = Math.max(1, Math.min(20, 1 + index * 0.5 + Math.random() * 2));
     
     // Random delta changes for comparison
-    const deltaFactor = 0.9 + Math.random() * 0.4;
     const deltaClicks = Math.random() > 0.3 ? (Math.random() > 0.5 ? 1 : -1) * Math.random() * 0.25 : 0;
     const deltaImpressions = Math.random() > 0.3 ? (Math.random() > 0.5 ? 1 : -1) * Math.random() * 0.2 : 0;
     const deltaCtr = Math.random() > 0.3 ? (Math.random() > 0.5 ? 1 : -1) * Math.random() * 0.15 : 0;
@@ -90,7 +88,6 @@ const generateMockTopPages = (startDate: string, endDate: string, count = 20): T
 };
 
 const TopPagesPage: React.FC = () => {
-  const theme = useTheme();
   const navigate = useNavigate();
   const [selectedProperty, setSelectedProperty] = useState('');
   const [dateRanges, setDateRanges] = useState<DateRange[]>([]);
