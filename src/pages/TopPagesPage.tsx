@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -12,12 +12,11 @@ import {
   TablePagination,
   Alert,
   Button,
-  Chip,
   IconButton,
   Tooltip,
   Skeleton,
   useTheme,
-  Divider,
+  Divider
 } from '@mui/material';
 import {
   TrendingUp,
@@ -109,24 +108,20 @@ const TopPagesPage: React.FC = () => {
   const [credits, setCredits] = useState(0);
   const [showPremiumAlert, setShowPremiumAlert] = useState(false);
 
-  const fetchTopPages = async () => {
+  const fetchTopPages = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       setShowPremiumAlert(false);
-
-      // In a real app, this would be an API call to fetch GSC data
-      // For MVP, we'll use mock data
+  
       const allPages = generateMockTopPages(selectedRange.startDate, selectedRange.endDate, 50);
       
-      // Simulate pagination
       const start = page * rowsPerPage;
       const displayedPages = allPages.slice(start, start + rowsPerPage);
       
       setTopPages(displayedPages);
       setTotalPages(allPages.length);
       
-      // Show premium alert if trying to view more than 10 pages with no credits
       if (page * rowsPerPage + rowsPerPage > 10 && credits === 0) {
         setShowPremiumAlert(true);
       }
@@ -137,7 +132,7 @@ const TopPagesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedRange, page, rowsPerPage, credits]);
 
   // Initialize date ranges and fetch user credits
   useEffect(() => {

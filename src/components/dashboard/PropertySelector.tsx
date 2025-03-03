@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   FormControl,
   InputLabel,
@@ -29,24 +29,24 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const fetchProperties = async () => {
+  const fetchProperties = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const gscProperties = await gscService.getProperties();
-      setProperties(gscProperties);
       
-      // If no property is selected and we got properties, select the first one
       if (!selectedProperty && gscProperties.length > 0) {
         onPropertyChange(gscProperties[0].siteUrl);
       }
-    } catch (err) {
-      console.error('Failed to fetch GSC properties:', err);
+      
+      setProperties(gscProperties);
+    } catch (error) {
+      console.error('Failed to fetch GSC properties:', error);
       setError('Failed to load properties');
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedProperty, onPropertyChange]);
 
   useEffect(() => {
     fetchProperties();

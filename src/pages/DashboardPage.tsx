@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Grid, Box, Typography, Paper, Skeleton, Alert, Button, Divider } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Grid, Box, Typography, Paper, Alert, Button, Divider } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 
@@ -99,26 +99,21 @@ const DashboardPage: React.FC = () => {
     position: 0
   });
 
-  const fetchPerformanceData = async () => {
+  const fetchPerformanceData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-
-      // In a real app, this would be an API call to fetch GSC data
-      // For MVP, we'll use mock data
+  
       const mockData = generateMockData(selectedRange.startDate, selectedRange.endDate);
       setPerformanceData(mockData);
       
-      // Calculate summary metrics
       const metrics = calculateSummaryMetrics(mockData);
       setSummaryMetrics(metrics);
       
-      // Get previous period data for comparison
       const prevPeriod = gscService.getPreviousPeriod(selectedRange.startDate, selectedRange.endDate);
       const prevData = generateMockData(prevPeriod.startDate, prevPeriod.endDate, 0.9);
       setPreviousPeriodData(prevData);
       
-      // Calculate previous period summary metrics
       const prevMetrics = calculateSummaryMetrics(prevData);
       setPreviousSummaryMetrics(prevMetrics);
       
@@ -128,7 +123,7 @@ const DashboardPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedRange]);
 
   // Initialize date ranges
   useEffect(() => {

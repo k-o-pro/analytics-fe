@@ -20,18 +20,11 @@ import {
   Chip
 } from '@mui/material';
 import {
-  ExpandMore as ExpandMoreIcon,
-  Refresh as RefreshIcon,
   TrendingUp,
   TrendingDown,
   TrendingFlat,
-  Info as InfoIcon,
-  Error as AlertIcon,
   Lightbulb as LightbulbIcon,
-  CheckCircle as CheckCircleIcon,
-  ArrowUpward,
-  ArrowDownward,
-  ArrowForward
+  Info as InfoIcon
 } from '@mui/icons-material';
 
 import PropertySelector from '../components/dashboard/PropertySelector';
