@@ -37,6 +37,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        {/* Special route for OAuth callback - outside PrivateRoute to avoid redirect loops */}
         <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
         
         <Route path="/" element={<PrivateRoute />}>

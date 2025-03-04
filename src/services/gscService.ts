@@ -67,7 +67,11 @@ export const gscService = {
   getAuthUrl: (): string => {
     const baseUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
     const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-    const redirectUri = `${window.location.origin}/#/oauth-callback`;
+    // Use "/oauth-callback" as the redirect URI without the hash
+    const redirectUri = `${window.location.origin}/oauth-callback`;
+    
+    // For debugging
+    console.log('OAuth Redirect URI:', redirectUri);
     
     const params = new URLSearchParams({
       client_id: clientId || '',
@@ -75,7 +79,9 @@ export const gscService = {
       response_type: 'code',
       scope: 'https://www.googleapis.com/auth/webmasters.readonly',
       access_type: 'offline',
-      prompt: 'consent'
+      prompt: 'consent',
+      // Add a random state parameter to prevent CSRF
+      state: Math.random().toString(36).substring(2, 15)
     });
     
     return `${baseUrl}?${params.toString()}`;
