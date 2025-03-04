@@ -66,41 +66,64 @@ export const gscService = {
   // Connect to GSC
   getAuthUrl: (): string => {
     const baseUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
-    const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+    
+    // Get client ID from environment - hardcoded for now as a fallback if env var fails
+    const fallbackClientId = '724601444957-h1sofo90i307cjln4ds6jbdo601t314m.apps.googleusercontent.com';
+    const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || fallbackClientId;
+    
     // Use "/oauth-callback" as the redirect URI without the hash
     const redirectUri = `${window.location.origin}/oauth-callback`;
     
     // For debugging
-    console.log('OAuth Redirect URI:', redirectUri);
-    console.log('Client ID:', clientId);
+    console.log('OAuth Debug Info:');
+    console.log('- Redirect URI:', redirectUri);
+    console.log('- Client ID:', clientId);
+    console.log('- Environment variable present:', process.env.REACT_APP_GOOGLE_CLIENT_ID ? 'Yes' : 'No');
     
-    // Check if clientId is defined before proceeding
-    if (!clientId) {
-      console.error('REACT_APP_GOOGLE_CLIENT_ID is not defined in environment variables');
-      alert('Authentication error: Client ID is missing. Please contact support.');
-      return '';
-    }
+    // Build the OAuth URL parameters
+    const params = new URLSearchParams();
+    params.append('client_id', clientId);
+    params.append('redirect_uri', redirectUri);
+    params.append('response_type', 'code');
+    params.append('scope', 'https://www.googleapis.com/auth/webmasters.readonly');
+    params.append('access_type', 'offline');
+    params.append('prompt', 'consent');
+    params.append('state', Math.random().toString(36).substring(2, 15));
     
-    const params = new URLSearchParams({
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      response_type: 'code',
-      scope: 'https://www.googleapis.com/auth/webmasters.readonly',
-      access_type: 'offline',
-      prompt: 'consent',
-      // Add a random state parameter to prevent CSRF
-      state: Math.random().toString(36).substring(2, 15)
-    });
+    const authUrl = `${baseUrl}?${params.toString()}`;
+    console.log('- Generated Auth URL:', authUrl);
     
-    return `${baseUrl}?${params.toString()}`;
+    return authUrl;
   },
 
   // Handle OAuth callback
   handleCallback: async (code: string): Promise<boolean> => {
     try {
-      await api.post('/auth/callback', { code });
-      return true;
+      console.log('Processing OAuth callback with code:', code.substring(0, 5) + '...');
+      
+      // Send the code to the backend for token exchange
+      const response = await api.post('/auth/callback', { 
+        code,
+        state: 'callback' // Include state parameter for validation
+      });
+      
+      console.log('OAuth callback response:', response.status, response.data);
+      
+      if (response.data && response.data.success) {
+        console.log('OAuth callback successful');
+        return true;
+      } else {
+        console.error('OAuth callback returned success=false:', response.data);
+        return false;
+      }
     } catch (error) {
+      console.error('OAuth callback error:', error);
+      
+      // Check if it's an axios error with response data
+      if (error && (error as any).response) {
+        console.error('Error response data:', (error as any).response.data);
+      }
+      
       return false;
     }
   },

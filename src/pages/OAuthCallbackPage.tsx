@@ -29,12 +29,27 @@ const OAuthCallbackPage: React.FC = () => {
           code = hashParams.get('code');
         }
         
-        // Debug information
-        console.log('OAuth callback received. URL:', window.location.href);
-        console.log('Code found:', code ? 'Yes' : 'No');
+        // Detailed debug information
+        console.log('OAuth callback received:');
+        console.log('- URL:', window.location.href);
+        console.log('- Search params:', location.search);
+        console.log('- Hash:', location.hash);
+        console.log('- Code present:', code ? 'Yes' : 'No');
+        
+        // If there's an error parameter, display it
+        const errorMsg = queryParams.get('error');
+        if (errorMsg) {
+          console.error('Error returned from Google:', errorMsg);
+          setError(`Google returned an error: ${errorMsg}`);
+          setLoading(false);
+          return;
+        }
         
         if (!code) {
-          throw new Error('No authorization code found in the URL');
+          console.error('No authorization code found in URL parameters');
+          setError('No authorization code was returned from Google. Please try again.');
+          setLoading(false);
+          return;
         }
         
         // Check auth status - might need to redirect if not logged in
@@ -59,11 +74,16 @@ const OAuthCallbackPage: React.FC = () => {
           sessionStorage.removeItem('pending_oauth_code');
         }
         
+        console.log('Sending code to backend for processing...');
+        
         // Process the OAuth callback
         const success = await gscService.handleCallback(code);
         
         if (!success) {
-          throw new Error('Failed to authenticate with Google');
+          console.error('Failed to authenticate with Google Search Console API');
+          setError('Failed to authenticate with Google. This could be due to an expired authorization code or server configuration issue. Please try again.');
+          setLoading(false);
+          return;
         }
         
         // Clear loading and navigate after successful connection
@@ -76,7 +96,7 @@ const OAuthCallbackPage: React.FC = () => {
         
       } catch (err) {
         console.error('OAuth callback error:', err);
-        setError(err instanceof Error ? err.message : 'Authentication failed');
+        setError(err instanceof Error ? err.message : 'Authentication failed due to an unknown error');
         setLoading(false);
       }
     };
