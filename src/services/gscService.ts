@@ -56,6 +56,13 @@ export type DateRange = {
   label: string;
 };
 
+// Define type for OAuth callback response
+type OAuthCallbackResponse = {
+  success: boolean;
+  message?: string;
+  error?: string;
+};
+
 export const gscService = {
   // Get GSC properties connected to user account
   getProperties: async (): Promise<GSCProperty[]> => {
@@ -102,7 +109,7 @@ export const gscService = {
       console.log('Processing OAuth callback with code:', code.substring(0, 5) + '...');
       
       // Send the code to the backend for token exchange
-      const response = await api.post('/auth/callback', { 
+      const response = await api.post<OAuthCallbackResponse>('/auth/callback', { 
         code,
         state: 'callback' // Include state parameter for validation
       });
