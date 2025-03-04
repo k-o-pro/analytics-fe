@@ -9,7 +9,7 @@ const OAuthCallbackPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, checkAuthState } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -52,9 +52,12 @@ const OAuthCallbackPage: React.FC = () => {
           return;
         }
         
+        // Force check auth state from localStorage - this handles redirects properly
+        const isUserAuthenticated = checkAuthState();
+        
         // Check auth status - might need to redirect if not logged in
-        if (!isAuthenticated) {
-          console.log('User not authenticated, redirecting to login');
+        if (!isUserAuthenticated) {
+          console.log('User not authenticated after auth state check, redirecting to login');
           // Save the auth code in session storage before redirecting to login
           sessionStorage.setItem('pending_oauth_code', code);
           navigate('/login', { 
@@ -65,6 +68,8 @@ const OAuthCallbackPage: React.FC = () => {
           });
           return;
         }
+        
+        console.log('User authenticated, proceeding with OAuth callback');
         
         // Retrieve stored code if we were redirected back after login
         const storedCode = sessionStorage.getItem('pending_oauth_code');

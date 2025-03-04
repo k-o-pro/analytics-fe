@@ -24,6 +24,7 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<boolean>;
+  checkAuthState: () => boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -33,6 +34,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: () => {},
   refreshToken: async () => false,
+  checkAuthState: () => false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -42,31 +44,38 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Check if token exists and is valid on initial load
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const decoded = jwtDecode<User>(token);
-          const currentTime = Date.now() / 1000;
-          
-          if (decoded.exp > currentTime) {
-            setUser(decoded);
-            api.setAuthToken(token);
-          } else {
-            // Token expired
-            localStorage.removeItem('token');
-          }
-        } catch (error) {
-          // Invalid token
+  // Function to check authentication state from token in localStorage
+  const checkAuthState = () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode<User>(token);
+        const currentTime = Date.now() / 1000;
+        
+        if (decoded.exp > currentTime) {
+          setUser(decoded);
+          api.setAuthToken(token);
+          return true;
+        } else {
+          // Token expired
           localStorage.removeItem('token');
         }
+      } catch (error) {
+        // Invalid token
+        localStorage.removeItem('token');
       }
+    }
+    return false;
+  };
+
+  // Check if token exists and is valid on initial load
+  useEffect(() => {
+    const initAuth = async () => {
+      checkAuthState();
       setIsLoading(false);
     };
 
-    checkAuth();
+    initAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -118,7 +127,8 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       isLoading, 
       login, 
       logout,
-      refreshToken 
+      refreshToken,
+      checkAuthState
     }}>
       {children}
     </AuthContext.Provider>

@@ -108,6 +108,15 @@ export const gscService = {
     try {
       console.log('Processing OAuth callback with code:', code.substring(0, 5) + '...');
       
+      // Verify that the auth token is attached to requests
+      const token = localStorage.getItem('token');
+      console.log('Authorization token present:', !!token);
+      
+      // Make sure token is set in api
+      if (token) {
+        api.setAuthToken(token);
+      }
+      
       // Send the code to the backend for token exchange
       const response = await api.post<OAuthCallbackResponse>('/auth/callback', { 
         code,
@@ -128,7 +137,15 @@ export const gscService = {
       
       // Check if it's an axios error with response data
       if (error && (error as any).response) {
-        console.error('Error response data:', (error as any).response.data);
+        const responseData = (error as any).response.data;
+        console.error('Error response data:', responseData);
+        
+        // If authentication required error, we need to redirect to login
+        if (responseData?.authRequired) {
+          console.log('Authentication required, redirecting to login');
+          // This will be caught by the component and redirect
+          throw new Error('Authentication required');
+        }
       }
       
       return false;
