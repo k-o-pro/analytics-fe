@@ -107,7 +107,7 @@ const OAuthCallbackPage: React.FC = () => {
     };
 
     handleCallback();
-  }, [navigate, location, isAuthenticated]);
+  }, [navigate, location, isAuthenticated, checkAuthState]);
 
   const handleRetry = () => {
     window.location.href = gscService.getAuthUrl();
