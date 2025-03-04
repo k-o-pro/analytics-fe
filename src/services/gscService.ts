@@ -72,9 +72,17 @@ export const gscService = {
     
     // For debugging
     console.log('OAuth Redirect URI:', redirectUri);
+    console.log('Client ID:', clientId);
+    
+    // Check if clientId is defined before proceeding
+    if (!clientId) {
+      console.error('REACT_APP_GOOGLE_CLIENT_ID is not defined in environment variables');
+      alert('Authentication error: Client ID is missing. Please contact support.');
+      return '';
+    }
     
     const params = new URLSearchParams({
-      client_id: clientId || '',
+      client_id: clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
       scope: 'https://www.googleapis.com/auth/webmasters.readonly',
