@@ -106,11 +106,18 @@ const DashboardPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
+  
+      // Get previous period date range
       const { startDate: prevStartDate, endDate: prevEndDate } = 
         gscService.getPreviousPeriod(selectedRange.startDate, selectedRange.endDate);
       
+      // Calculate metrics for both periods
       const currentMetrics = calculateSummaryMetrics(currentData);
       const previousMetrics = calculateSummaryMetrics(previousData);
+      
+      setSummaryMetrics(currentMetrics);
+      setPreviousSummaryMetrics(previousMetrics);
+
       const response = await fetch('/gsc/data', {
         method: 'POST',
         body: JSON.stringify({
