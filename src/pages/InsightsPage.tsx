@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   Box,
@@ -165,18 +165,21 @@ const InsightsPage: React.FC = () => {
       setGenerating(true);
       setError(null);
 
-      // In a real app, this would call the API
-      // For MVP, use mock data with a delay
-      setTimeout(() => {
-        const mockInsights = generateMockInsights();
-        setInsights(mockInsights);
-        setCredits(prev => Math.max(0, prev - 1));
-        setGenerating(false);
-      }, 2000);
+      if (!selectedProperty) return;
+
+      const response = await insightsService.generateInsights({
+        siteUrl: selectedProperty.siteUrl,
+        period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
+        data: null // Add any additional data needed for insights
+      });
+      
+      setInsights(response);
+      setCredits(prev => Math.max(0, prev - 1));
 
     } catch (err) {
       console.error('Failed to generate insights:', err);
       setError('Failed to generate insights. Please try again.');
+    } finally {
       setGenerating(false);
     }
   };
@@ -207,21 +210,6 @@ const InsightsPage: React.FC = () => {
         return <ArrowDownward sx={{ color: theme.palette.success.main }} />;
     }
   };
-
-  const fetchData = useCallback(async () => {
-    if (!selectedProperty) return;
-    try {
-      const response = await insightsService.generateInsights({
-        siteUrl: selectedProperty.siteUrl,
-        period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
-        data: null // Add any additional data needed for insights
-      });
-      setInsights(response);
-    } catch (error) {
-      console.error('Failed to generate insights:', error);
-      setError('Failed to generate insights. Please try again.');
-    }
-  }, [selectedProperty, selectedRange]);
 
   return (
     <Box>
