@@ -10,18 +10,19 @@ import PerformanceChart from '../components/visualizations/PerformanceChart';
 import { gscService, DateRange } from '../services/gscService';
 
 // Generate mock data for demo purposes
-const generateMockData = (startDate: string, endDate: string) => {
+const generateMockData = (startDate: string, endDate: string, property: string) => {
   const result = [];
   let current = new Date(startDate);
   const end = new Date(endDate);
   
   // Use property URL to generate unique but consistent seed
-  const seed = selectedProperty.split('.').length;
+  const seed = property.split('.').length;
   
   // Base values that will be unique per property
   let clicks = 100 * seed;
   let impressions = 1000 * seed;
   let position = 20 - seed;
+  
   
   // Add a data point for each day
   while (current <= end) {
@@ -111,11 +112,11 @@ const DashboardPage: React.FC = () => {
         gscService.getPreviousPeriod(selectedRange.startDate, selectedRange.endDate);
   
       // Generate data for current period
-      const currentData = generateMockData(selectedRange.startDate, selectedRange.endDate);
+      const currentData = generateMockData(selectedRange.startDate, selectedRange.endDate, selectedProperty);
       setPerformanceData(currentData);
       
       // Generate data for previous period
-      const previousData = generateMockData(prevStartDate, prevEndDate);
+      const previousData = generateMockData(prevStartDate, prevEndDate, selectedProperty);
       
       // Calculate metrics for both periods
       const currentMetrics = calculateSummaryMetrics(currentData);
@@ -125,12 +126,11 @@ const DashboardPage: React.FC = () => {
       setPreviousSummaryMetrics(previousMetrics);
       
     } catch (err) {
-      console.error('Failed to fetch performance data:', err);
       setError('Failed to load performance data. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [selectedProperty, selectedRange]); 
+  }, [selectedProperty, selectedRange]);
 
   // Initialize date ranges
   useEffect(() => {
