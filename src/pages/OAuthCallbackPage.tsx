@@ -9,6 +9,7 @@ const OAuthCallbackPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string>('');
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, checkAuthState, login } = useAuth();
@@ -17,6 +18,14 @@ const OAuthCallbackPage: React.FC = () => {
     const handleCallback = async () => {
       try {
         setLoading(true);
+        let debugLog = '';
+        const addDebug = (msg: string) => {
+          console.log(msg);
+          debugLog += msg + '\n';
+          setDebugInfo(debugLog);
+        };
+        
+        addDebug('🔍 Starting OAuth callback handling...');
         
         // Get code from URL parameters - handle both search and hash params
         let code = null;
@@ -32,18 +41,17 @@ const OAuthCallbackPage: React.FC = () => {
         }
         
         // Detailed debug information
-        console.log('OAuth callback received:');
-        console.log('- URL:', window.location.href);
-        console.log('- Search params:', location.search);
-        console.log('- Hash:', location.hash);
-        console.log('- Code present:', code ? 'Yes' : 'No');
-        console.log('- Auth state:', isAuthenticated ? 'Authenticated' : 'Not authenticated');
-        console.log('- Token present:', localStorage.getItem('token') ? 'Yes' : 'No');
+        addDebug(`🔗 URL: ${window.location.href}`);
+        addDebug(`🔍 Search params: ${location.search}`);
+        addDebug(`🔗 Hash: ${location.hash}`);
+        addDebug(`🔑 Code present: ${code ? 'Yes' : 'No'}`);
+        addDebug(`🔐 Auth state: ${isAuthenticated ? 'Authenticated' : 'Not authenticated'}`);
+        addDebug(`🪙 Token present: ${localStorage.getItem('token') ? 'Yes' : 'No'}`);
         
         // If there's an error parameter, display it
         const errorMsg = queryParams.get('error');
         if (errorMsg) {
-          console.error('Error returned from Google:', errorMsg);
+          addDebug(`❌ Error returned from Google: ${errorMsg}`);
           setError(`Google returned an error: ${errorMsg}`);
           setLoading(false);
           return;
@@ -53,19 +61,20 @@ const OAuthCallbackPage: React.FC = () => {
           // Check if we have a stored code from a previous attempt
           const storedCode = sessionStorage.getItem('pending_oauth_code');
           if (storedCode) {
-            console.log('Retrieved stored authorization code from session storage');
+            addDebug('🔄 Retrieved stored authorization code from session storage');
             code = storedCode;
             if (!isRetrying) {
               setIsRetrying(true);
             }
           } else {
-            console.error('No authorization code found in URL parameters or session storage');
+            addDebug('❌ No authorization code found in URL parameters or session storage');
             setError('No authorization code was returned from Google. Please try again.');
             setLoading(false);
             return;
           }
         } else {
           // Store code in case we need it after a redirect
+          addDebug('💾 Storing authorization code in session storage');
           sessionStorage.setItem('pending_oauth_code', code);
         }
         
@@ -75,18 +84,22 @@ const OAuthCallbackPage: React.FC = () => {
         
         // Double check with auth context
         if (!isUserAuthenticated) {
+          addDebug('🔄 Token not found in localStorage, checking auth context...');
           isUserAuthenticated = checkAuthState();
+          addDebug(`🔐 Auth context check result: ${isUserAuthenticated ? 'Authenticated' : 'Not authenticated'}`);
         }
         
         // Ensure the token is set in the API
         if (token) {
-          console.log('Setting auth token in API');
+          addDebug('🔑 Setting auth token in API service');
           api.setAuthToken(token);
+        } else {
+          addDebug('⚠️ No token available to set in API');
         }
         
         // Check auth status - might need to redirect if not logged in
         if (!isUserAuthenticated) {
-          console.log('User not authenticated, redirecting to login');
+          addDebug('🔄 User not authenticated, redirecting to login');
           navigate('/login', { 
             state: { 
               redirectAfterLogin: '/oauth-callback',
@@ -96,23 +109,26 @@ const OAuthCallbackPage: React.FC = () => {
           return;
         }
         
-        console.log('User authenticated, proceeding with OAuth callback');
-        console.log('Sending code to backend for processing...');
+        addDebug('✅ User authenticated, proceeding with OAuth callback');
+        addDebug(`🔑 Auth code for exchange: ${code?.substring(0, 5)}...`);
         
         // Process the OAuth callback
+        addDebug('🔄 Sending authorization code to backend...');
         const success = await gscService.handleCallback(code);
         
         if (!success) {
-          console.error('Failed to authenticate with Google Search Console API');
+          addDebug('❌ Failed to authenticate with Google Search Console API');
           setError('Failed to authenticate with Google. This could be due to an expired authorization code or server configuration issue. Please try again.');
           setLoading(false);
           return;
         }
         
         // Clear stored code on success
+        addDebug('✅ OAuth callback successful, clearing stored code');
         sessionStorage.removeItem('pending_oauth_code');
         
         // Clear loading and navigate after successful connection
+        addDebug('➡️ Redirecting to settings page');
         setLoading(false);
         navigate('/settings', { 
           state: { 
@@ -122,6 +138,7 @@ const OAuthCallbackPage: React.FC = () => {
         
       } catch (err) {
         console.error('OAuth callback error:', err);
+        setDebugInfo(prev => prev + `\n❌ ERROR: ${err instanceof Error ? err.message : String(err)}`);
         setError(err instanceof Error ? err.message : 'Authentication failed due to an unknown error');
         setLoading(false);
       }
@@ -181,11 +198,27 @@ const OAuthCallbackPage: React.FC = () => {
                   Cancel
                 </Button>
               </Box>
+              
+              {/* Debug info panel */}
+              <Box sx={{ mt: 4, p: 2, bgcolor: '#f5f5f5', borderRadius: 1, textAlign: 'left' }}>
+                <Typography variant="caption" component="div" sx={{ fontFamily: 'monospace', whiteSpace: 'pre-line' }}>
+                  {debugInfo}
+                </Typography>
+              </Box>
             </>
           ) : (
-            <Alert severity="success" sx={{ mt: 2 }}>
-              Successfully connected to Google Search Console!
-            </Alert>
+            <>
+              <Alert severity="success" sx={{ mt: 2 }}>
+                Successfully connected to Google Search Console!
+              </Alert>
+              
+              {/* Debug info panel */}
+              <Box sx={{ mt: 4, p: 2, bgcolor: '#f5f5f5', borderRadius: 1, textAlign: 'left' }}>
+                <Typography variant="caption" component="div" sx={{ fontFamily: 'monospace', whiteSpace: 'pre-line' }}>
+                  {debugInfo}
+                </Typography>
+              </Box>
+            </>
           )}
         </Paper>
       </Box>

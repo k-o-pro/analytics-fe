@@ -47,24 +47,34 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   // Function to check authentication state from token in localStorage
   const checkAuthState = () => {
     const token = localStorage.getItem('token');
+    console.log('Checking auth state, token present:', !!token);
+    
     if (token) {
       try {
         const decoded = jwtDecode<User>(token);
         const currentTime = Date.now() / 1000;
         
+        console.log('Token expiration:', new Date(decoded.exp * 1000).toLocaleString());
+        console.log('Current time:', new Date(currentTime * 1000).toLocaleString());
+        console.log('Token valid:', decoded.exp > currentTime ? 'Yes' : 'No');
+        
         if (decoded.exp > currentTime) {
           setUser(decoded);
           api.setAuthToken(token);
+          console.log('Auth state set to authenticated for user:', decoded.email);
           return true;
         } else {
           // Token expired
+          console.log('Token expired, removing from localStorage');
           localStorage.removeItem('token');
         }
       } catch (error) {
         // Invalid token
+        console.error('Invalid token in localStorage:', error);
         localStorage.removeItem('token');
       }
     }
+    console.log('Auth state set to unauthenticated');
     return false;
   };
 

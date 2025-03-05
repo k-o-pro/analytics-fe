@@ -66,8 +66,27 @@ type OAuthCallbackResponse = {
 export const gscService = {
   // Get GSC properties connected to user account
   getProperties: async (): Promise<GSCProperty[]> => {
-    const response = await api.get<{siteEntry: GSCProperty[]}>('/gsc/properties');
-    return response.data.siteEntry || [];
+    try {
+      console.log('Fetching GSC properties from API');
+      const response = await api.get<{success: boolean, siteEntry?: GSCProperty[], error?: string, needsConnection?: boolean}>('/gsc/properties');
+      
+      console.log('GSC properties response:', response.data);
+      
+      if (!response.data.success) {
+        console.warn('Failed to fetch GSC properties:', response.data.error);
+        if (response.data.needsConnection) {
+          console.log('GSC connection required');
+          // Return empty array to indicate no properties (will trigger connection UI)
+          return [];
+        }
+        throw new Error(response.data.error || 'Failed to fetch GSC properties');
+      }
+      
+      return response.data.siteEntry || [];
+    } catch (error) {
+      console.error('Error fetching GSC properties:', error);
+      return [];
+    }
   },
 
   // Connect to GSC
@@ -86,6 +105,14 @@ export const gscService = {
     console.log('- Redirect URI:', redirectUri);
     console.log('- Client ID:', clientId);
     console.log('- Environment variable present:', process.env.REACT_APP_GOOGLE_CLIENT_ID ? 'Yes' : 'No');
+    console.log('- User authentication status:', localStorage.getItem('token') ? 'Logged in' : 'Not logged in');
+    
+    // Force token check - if user is not logged in, redirect to login first
+    if (!localStorage.getItem('token')) {
+      console.warn('User not logged in before GSC connection attempt - redirecting to login first');
+      window.location.href = '/login?redirect=connect-gsc';
+      return '';
+    }
     
     // Build the OAuth URL parameters
     const params = new URLSearchParams();
@@ -94,11 +121,20 @@ export const gscService = {
     params.append('response_type', 'code');
     params.append('scope', 'https://www.googleapis.com/auth/webmasters.readonly');
     params.append('access_type', 'offline');
-    params.append('prompt', 'consent');
-    params.append('state', Math.random().toString(36).substring(2, 15));
+    params.append('prompt', 'consent'); // Always show consent screen to ensure refresh token
+    
+    // Add a state parameter with timestamp and random value to prevent CSRF
+    const stateObj = {
+      t: Date.now(),
+      r: Math.random().toString(36).substring(2, 15)
+    };
+    params.append('state', JSON.stringify(stateObj));
     
     const authUrl = `${baseUrl}?${params.toString()}`;
     console.log('- Generated Auth URL:', authUrl);
+    
+    // Save auth state in sessionStorage for verification
+    sessionStorage.setItem('oauth_state', JSON.stringify(stateObj));
     
     return authUrl;
   },
