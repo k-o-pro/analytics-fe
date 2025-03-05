@@ -49,7 +49,6 @@ const DashboardPage: React.FC = () => {
     label: 'Last 30 days'
   });
   const [loading, setLoading] = useState(true);
-  const [searchData, setSearchData] = useState(null);
   const [error, setError] = useState<string | null>(null);
   const [performanceData, setPerformanceData] = useState<any[]>([]);
   const [summaryMetrics, setSummaryMetrics] = useState({
@@ -64,23 +63,6 @@ const DashboardPage: React.FC = () => {
     ctr: 0,
     position: 0
   });
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const analytics = await gscService.fetchSearchAnalytics({
-        startDate: selectedRange.startDate,
-        endDate: selectedRange.endDate,
-        siteUrl: selectedProperty
-      });
-      setSearchData(analytics);
-    } catch (error) {
-      console.error('Error fetching search analytics:', error);
-      // Handle error appropriately
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchPerformanceData = useCallback(async () => {
     try {
