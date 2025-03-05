@@ -106,27 +106,25 @@ const DashboardPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-  
-      // Get previous period date range
       const { startDate: prevStartDate, endDate: prevEndDate } = 
         gscService.getPreviousPeriod(selectedRange.startDate, selectedRange.endDate);
-  
-      // Generate data for current period
-      const currentData = generateMockData(selectedRange.startDate, selectedRange.endDate, selectedProperty);
-      setPerformanceData(currentData);
       
-      // Generate data for previous period
-      const previousData = generateMockData(prevStartDate, prevEndDate, selectedProperty);
-      
-      // Calculate metrics for both periods
       const currentMetrics = calculateSummaryMetrics(currentData);
       const previousMetrics = calculateSummaryMetrics(previousData);
+      const response = await fetch('/gsc/data', {
+        method: 'POST',
+        body: JSON.stringify({
+          siteUrl: selectedProperty,
+          startDate: selectedRange.startDate,
+          endDate: selectedRange.endDate
+        })
+      });
       
-      setSummaryMetrics(currentMetrics);
-      setPreviousSummaryMetrics(previousMetrics);
+      const data = await response.json();
+      setPerformanceData(data);
       
     } catch (err) {
-      setError('Failed to load performance data. Please try again.');
+      setError('Failed to load performance data');
     } finally {
       setLoading(false);
     }
