@@ -8,6 +8,37 @@ import MetricCard from '../components/visualizations/MetricCard';
 import PerformanceChart from '../components/visualizations/PerformanceChart';
 import { gscService, DateRange } from '../services/gscService';
 
+// Helper function to calculate summary metrics from GSC data
+const calculateSummaryMetrics = (rows: any[]) => {
+  if (!rows.length) {
+    return {
+      clicks: 0,
+      impressions: 0,
+      ctr: 0,
+      position: 0
+    };
+  }
+
+  const totals = rows.reduce((acc, row) => ({
+    clicks: acc.clicks + (row.clicks || 0),
+    impressions: acc.impressions + (row.impressions || 0),
+    ctr: acc.ctr + (row.ctr || 0),
+    position: acc.position + (row.position || 0)
+  }), {
+    clicks: 0,
+    impressions: 0,
+    ctr: 0,
+    position: 0
+  });
+
+  return {
+    clicks: totals.clicks,
+    impressions: totals.impressions,
+    ctr: totals.ctr / rows.length,
+    position: totals.position / rows.length
+  };
+};
+
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedProperty, setSelectedProperty] = useState('');
