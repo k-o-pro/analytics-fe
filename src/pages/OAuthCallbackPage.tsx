@@ -173,7 +173,7 @@ const OAuthCallbackPage: React.FC = () => {
     };
 
     handleCallback();
-  }, [navigate, location, isAuthenticated, checkAuthState, isRetrying]);
+  }, [navigate, location, isAuthenticated, checkAuthState, isRetrying, login]);
 
   const handleRetry = () => {
     window.location.href = gscService.getAuthUrl();
