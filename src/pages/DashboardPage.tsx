@@ -25,11 +25,11 @@ const fetchData = async () => {
   }
 };
 
-useEffect(() => {
-  if (selectedProperty) {
-    fetchData();
-  }
-}, [selectedProperty, startDate, endDate]);
+  useEffect(() => {
+    if (selectedProperty) {
+      fetchData();
+    }
+  }, [selectedProperty, startDate, endDate]);
 
 // Calculate summary metrics
 const calculateSummaryMetrics = (data: any[]) => {
@@ -55,6 +55,8 @@ const calculateSummaryMetrics = (data: any[]) => {
 };
 
 const DashboardPage: React.FC = () => {
+  const [searchData, setSearchData] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [selectedProperty, setSelectedProperty] = useState('');
   const [dateRanges, setDateRanges] = useState<DateRange[]>([]);

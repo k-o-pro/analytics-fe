@@ -1,4 +1,11 @@
-import { api } from './api';
+import { API_URL } from '../config';
+import { getToken } from '../utils/auth';
+
+interface SearchAnalyticsParams {
+  startDate: string;
+  endDate: string;
+  siteUrl: string;
+}
 
 export type GSCProperty = {
   siteUrl: string;
@@ -222,7 +229,7 @@ export const gscService = {
     }
   },
 
-  export async function fetchSearchAnalytics(startDate: string, endDate: string, selectedProperty: string) {
+  export async function fetchSearchAnalytics({ startDate, endDate, siteUrl }: SearchAnalyticsParams) {
     try {
       const response = await fetch(`${API_URL}/gsc/search-analytics`, {
         method: 'POST',
@@ -233,7 +240,7 @@ export const gscService = {
         body: JSON.stringify({
           startDate,
           endDate,
-          siteUrl: selectedProperty
+          siteUrl
         })
       });
       
