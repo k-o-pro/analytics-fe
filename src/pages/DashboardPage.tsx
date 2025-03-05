@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Grid, Box, Typography, Paper, Alert, Button, Divider } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
 
 import PropertySelector from '../components/dashboard/PropertySelector';
 import DateRangePicker from '../components/dashboard/DateRangePicker';
