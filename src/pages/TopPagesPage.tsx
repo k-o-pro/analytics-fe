@@ -31,61 +31,6 @@ import DateRangePicker from '../components/dashboard/DateRangePicker';
 import { gscService, DateRange, TopPage } from '../services/gscService';
 import { creditsService } from '../services/creditsService';
 
-// Generate mock top pages data
-const generateMockTopPages = (startDate: string, endDate: string, count = 20): TopPage[] => {
-  const pages = [
-    { url: '/', name: 'Homepage' },
-    { url: '/blog', name: 'Blog' },
-    { url: '/about', name: 'About Us' },
-    { url: '/services', name: 'Services' },
-    { url: '/contact', name: 'Contact' },
-    { url: '/blog/seo-tips', name: 'SEO Tips' },
-    { url: '/blog/google-updates', name: 'Google Updates' },
-    { url: '/blog/analytics', name: 'Analytics Guide' },
-    { url: '/products', name: 'Products' },
-    { url: '/pricing', name: 'Pricing' },
-    { url: '/blog/keyword-research', name: 'Keyword Research' },
-    { url: '/faq', name: 'FAQ' },
-    { url: '/testimonials', name: 'Testimonials' },
-    { url: '/case-studies', name: 'Case Studies' },
-    { url: '/resources', name: 'Resources' },
-    { url: '/blog/content-strategy', name: 'Content Strategy' },
-    { url: '/careers', name: 'Careers' },
-    { url: '/terms', name: 'Terms & Conditions' },
-    { url: '/privacy', name: 'Privacy Policy' },
-    { url: '/sitemap', name: 'Sitemap' },
-  ];
-
-  return pages.slice(0, count).map((page, index) => {
-    // Base metrics that decrease as we go down the list
-    const factor = Math.pow(0.85, index);
-    const randomFactor = 0.8 + Math.random() * 0.4;
-    
-    const clicks = Math.round(500 * factor * randomFactor);
-    const impressions = Math.round(5000 * factor * randomFactor);
-    const ctr = clicks / impressions;
-    const position = Math.max(1, Math.min(20, 1 + index * 0.5 + Math.random() * 2));
-    
-    // Random delta changes for comparison
-    const deltaClicks = Math.random() > 0.3 ? (Math.random() > 0.5 ? 1 : -1) * Math.random() * 0.25 : 0;
-    const deltaImpressions = Math.random() > 0.3 ? (Math.random() > 0.5 ? 1 : -1) * Math.random() * 0.2 : 0;
-    const deltaCtr = Math.random() > 0.3 ? (Math.random() > 0.5 ? 1 : -1) * Math.random() * 0.15 : 0;
-    const deltaPosition = Math.random() > 0.3 ? (Math.random() > 0.5 ? 1 : -1) * Math.random() * 0.3 : 0;
-    
-    return {
-      url: page.url,
-      clicks,
-      impressions,
-      ctr,
-      position,
-      deltaClicks: clicks * deltaClicks,
-      deltaImpressions: impressions * deltaImpressions,
-      deltaCtr: ctr * deltaCtr,
-      deltaPosition: position * deltaPosition
-    };
-  });
-};
-
 const TopPagesPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedProperty, setSelectedProperty] = useState('');
@@ -104,21 +49,25 @@ const TopPagesPage: React.FC = () => {
   const [credits, setCredits] = useState(0);
   const [showPremiumAlert, setShowPremiumAlert] = useState(false);
 
-  const fetchTopPages = useCallback(async () => {
+  const fetchData = useCallback(async () => {
+    if (!selectedProperty) return;
+    
     try {
       setLoading(true);
       setError(null);
       setShowPremiumAlert(false);
-  
-      const allPages = generateMockTopPages(selectedRange.startDate, selectedRange.endDate, 50);
+
+      const response = await gscService.getTopPages(
+        selectedProperty.siteUrl,
+        selectedRange.startDate,
+        selectedRange.endDate,
+        (page + 1) * rowsPerPage // requested limit
+      );
+
+      setTopPages(response.pages);
+      setTotalPages(response.pages.length);
       
-      const start = page * rowsPerPage;
-      const displayedPages = allPages.slice(start, start + rowsPerPage);
-      
-      setTopPages(displayedPages);
-      setTotalPages(allPages.length);
-      
-      if (page * rowsPerPage + rowsPerPage > 10 && credits === 0) {
+      if (page * rowsPerPage + rowsPerPage > 10 && response.creditsRemaining === 0) {
         setShowPremiumAlert(true);
       }
       
@@ -128,7 +77,7 @@ const TopPagesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedRange, page, rowsPerPage, credits]);
+  }, [selectedProperty, selectedRange, page, rowsPerPage]);
 
   // Initialize date ranges and fetch user credits
   useEffect(() => {
@@ -142,9 +91,9 @@ const TopPagesPage: React.FC = () => {
   // Fetch data when property or date range changes
   useEffect(() => {
     if (selectedProperty && selectedRange.startDate && selectedRange.endDate) {
-      fetchTopPages();
+      fetchData();
     }
-  }, [selectedProperty, selectedRange, page, rowsPerPage, fetchTopPages]);
+  }, [selectedProperty, selectedRange, page, rowsPerPage, fetchData]);
 
   const fetchUserCredits = async () => {
     try {
@@ -198,7 +147,7 @@ const TopPagesPage: React.FC = () => {
     if (result.success) {
       setCredits(result.credits);
       setShowPremiumAlert(false);
-      fetchTopPages();
+      fetchData();
     } else {
       // Handle failure
       setError('Failed to use credit. Please try again.');
@@ -252,7 +201,7 @@ const TopPagesPage: React.FC = () => {
             severity="error" 
             sx={{ mb: 2 }}
             action={
-              <Button color="inherit" size="small" onClick={fetchTopPages}>
+              <Button color="inherit" size="small" onClick={fetchData}>
                 Retry
               </Button>
             }

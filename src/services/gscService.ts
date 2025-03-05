@@ -263,10 +263,20 @@ export const gscService = {
   },
 
   // Get top pages with performance data
-  getTopPages: async (request: TopPagesRequest): Promise<TopPagesResponse> => {
-    const response = await api.get<TopPagesResponse>('/gsc/top-pages', { 
-      params: request 
+  getTopPages: async (
+    siteUrl: string,
+    startDate: string,
+    endDate: string,
+    limit: number = 10
+  ): Promise<TopPagesResponse> => {
+    const params = new URLSearchParams({
+      siteUrl,
+      startDate,
+      endDate,
+      limit: limit.toString()
     });
+
+    const response = await api.get<TopPagesResponse>(`/gsc/top-pages?${params}`);
     return response.data;
   },
 
