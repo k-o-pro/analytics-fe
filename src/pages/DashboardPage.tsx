@@ -8,6 +8,29 @@ import MetricCard from '../components/visualizations/MetricCard';
 import PerformanceChart from '../components/visualizations/PerformanceChart';
 import { gscService, DateRange } from '../services/gscService';
 
+const fetchData = async () => {
+  try {
+    setLoading(true);
+    const analytics = await fetchSearchAnalytics(
+      startDate.toISOString(),
+      endDate.toISOString(),
+      selectedProperty // Pass the selected property
+    );
+    setSearchData(analytics);
+  } catch (error) {
+    console.error('Error fetching search analytics:', error);
+    // Handle error appropriately
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  if (selectedProperty) {
+    fetchData();
+  }
+}, [selectedProperty, startDate, endDate]);
+
 // Calculate summary metrics
 const calculateSummaryMetrics = (data: any[]) => {
   if (!data.length) return { clicks: 0, impressions: 0, ctr: 0, position: 0 };

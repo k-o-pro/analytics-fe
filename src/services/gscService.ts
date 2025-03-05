@@ -222,6 +222,32 @@ export const gscService = {
     }
   },
 
+  export async function fetchSearchAnalytics(startDate: string, endDate: string, selectedProperty: string) {
+    try {
+      const response = await fetch(`${API_URL}/gsc/search-analytics`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({
+          startDate,
+          endDate,
+          siteUrl: selectedProperty
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch search analytics');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching search analytics:', error);
+      throw error;
+    }
+  }
+
   // Fetch GSC metrics data
   fetchMetrics: async (request: GSCMetricsRequest): Promise<GSCResponse> => {
     const response = await api.post<GSCResponse>('/gsc/data', request);
