@@ -229,7 +229,7 @@ export const gscService = {
     }
   },
 
-  export async function fetchSearchAnalytics({ startDate, endDate, siteUrl }: SearchAnalyticsParams) {
+  fetchSearchAnalytics: async ({ startDate, endDate, siteUrl }: SearchAnalyticsParams) => {
     try {
       const response = await fetch(`${API_URL}/gsc/search-analytics`, {
         method: 'POST',
@@ -253,7 +253,7 @@ export const gscService = {
       console.error('Error fetching search analytics:', error);
       throw error;
     }
-  }
+  },
 
   // Fetch GSC metrics data
   fetchMetrics: async (request: GSCMetricsRequest): Promise<GSCResponse> => {

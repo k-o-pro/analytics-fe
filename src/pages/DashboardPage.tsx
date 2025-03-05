@@ -8,55 +8,7 @@ import MetricCard from '../components/visualizations/MetricCard';
 import PerformanceChart from '../components/visualizations/PerformanceChart';
 import { gscService, DateRange } from '../services/gscService';
 
-const fetchData = async () => {
-  try {
-    setLoading(true);
-    const analytics = await fetchSearchAnalytics(
-      startDate.toISOString(),
-      endDate.toISOString(),
-      selectedProperty // Pass the selected property
-    );
-    setSearchData(analytics);
-  } catch (error) {
-    console.error('Error fetching search analytics:', error);
-    // Handle error appropriately
-  } finally {
-    setLoading(false);
-  }
-};
-
-  useEffect(() => {
-    if (selectedProperty) {
-      fetchData();
-    }
-  }, [selectedProperty, startDate, endDate]);
-
-// Calculate summary metrics
-const calculateSummaryMetrics = (data: any[]) => {
-  if (!data.length) return { clicks: 0, impressions: 0, ctr: 0, position: 0 };
-  
-  const totals = data.reduce((acc, day) => {
-    acc.clicks += day.clicks;
-    acc.impressions += day.impressions;
-    acc.positions.push(day.position);
-    return acc;
-  }, { clicks: 0, impressions: 0, positions: [] as number[] });
-  
-  // Add type annotation for the sum parameter
-  const avgPosition = totals.positions.reduce((sum: number, pos: number) => sum + pos, 0) / totals.positions.length;
-  const ctr = totals.clicks / totals.impressions;
-  
-  return {
-    clicks: totals.clicks,
-    impressions: totals.impressions,
-    ctr,
-    position: avgPosition
-  };
-};
-
 const DashboardPage: React.FC = () => {
-  const [searchData, setSearchData] = useState(null);
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [selectedProperty, setSelectedProperty] = useState('');
   const [dateRanges, setDateRanges] = useState<DateRange[]>([]);
@@ -66,6 +18,7 @@ const DashboardPage: React.FC = () => {
     label: 'Last 30 days'
   });
   const [loading, setLoading] = useState(true);
+  const [searchData, setSearchData] = useState(null);
   const [error, setError] = useState<string | null>(null);
   const [performanceData, setPerformanceData] = useState<any[]>([]);
   const [summaryMetrics, setSummaryMetrics] = useState({
@@ -80,6 +33,23 @@ const DashboardPage: React.FC = () => {
     ctr: 0,
     position: 0
   });
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const analytics = await gscService.fetchSearchAnalytics({
+        startDate: selectedRange.startDate,
+        endDate: selectedRange.endDate,
+        siteUrl: selectedProperty
+      });
+      setSearchData(analytics);
+    } catch (error) {
+      console.error('Error fetching search analytics:', error);
+      // Handle error appropriately
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchPerformanceData = useCallback(async () => {
     try {
