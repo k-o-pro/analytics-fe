@@ -10,12 +10,15 @@ import PerformanceChart from '../components/visualizations/PerformanceChart';
 import { gscService, DateRange } from '../services/gscService';
 
 // Generate mock data for demo purposes
-const generateMockData = (startDate: string, endDate: string, seed = 1) => {
+const generateMockData = (startDate: string, endDate: string) => {
   const result = [];
   let current = new Date(startDate);
   const end = new Date(endDate);
   
-  // Base values that will be slightly randomized
+  // Use property URL to generate unique but consistent seed
+  const seed = selectedProperty.split('.').length;
+  
+  // Base values that will be unique per property
   let clicks = 100 * seed;
   let impressions = 1000 * seed;
   let position = 20 - seed;
