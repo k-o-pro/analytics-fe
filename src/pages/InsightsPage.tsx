@@ -38,57 +38,6 @@ import { gscService, DateRange, GSCProperty } from '../services/gscService';
 import { insightsService, InsightResponse } from '../services/insightsService';
 import { creditsService } from '../services/creditsService';
 
-// Mock function to generate insights
-const generateMockInsights = (): InsightResponse => {
-  return {
-    summary: "Your site's overall performance has improved by 12% this period with significant gains in organic traffic. Key pages like the homepage and blog content are performing well, but there are opportunities to optimize underperforming pages and improve CTR on high-impression keywords.",
-    performance: {
-      trend: Math.random() > 0.3 ? 'up' : Math.random() > 0.5 ? 'down' : 'stable',
-      details: "Overall clicks increased by 12.4% and impressions by 8.2% compared to the previous period. Average position improved from 18.3 to 16.7, while CTR increased from 2.1% to 2.3%."
-    },
-    topFindings: [
-      {
-        title: "Homepage search visibility improved",
-        description: "Your homepage has seen a 23% increase in impressions and has moved up 3 positions in search results for key terms."
-      },
-      {
-        title: "Blog content drives significant traffic",
-        description: "Blog posts account for 47% of your organic search traffic, with the most recent posts performing particularly well."
-      },
-      {
-        title: "Mobile CTR underperforms desktop",
-        description: "Your click-through rate on mobile devices (1.8%) is lower than desktop (2.7%), suggesting potential mobile usability issues."
-      },
-      {
-        title: "New keyword opportunities detected",
-        description: "We've identified 15 keywords where you're ranking on page 2 with potential to move to page 1 with optimization."
-      }
-    ],
-    recommendations: [
-      {
-        title: "Optimize meta titles for higher CTR",
-        description: "Your top 10 pages have an average CTR of 2.3%, which is below industry average. Review and update meta titles to be more compelling and include target keywords near the beginning.",
-        priority: "high"
-      },
-      {
-        title: "Improve mobile page experience",
-        description: "Address mobile usability issues flagged in Google Search Console to improve mobile rankings and CTR. Focus on text size, tap targets, and viewport configuration.",
-        priority: "high"
-      },
-      {
-        title: "Create content for keyword gaps",
-        description: "Your competitors are ranking for keywords related to [specific topic] that your site doesn't currently address. Consider creating content targeting these terms.",
-        priority: "medium"
-      },
-      {
-        title: "Consolidate similar content",
-        description: "Several blog posts cover similar topics and may be competing with each other. Consider consolidating these posts into comprehensive guides.",
-        priority: "low"
-      }
-    ]
-  };
-};
-
 const InsightsPage: React.FC = () => {
   const location = useLocation();
   const theme = useTheme();
