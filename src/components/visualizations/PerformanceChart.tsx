@@ -109,10 +109,10 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
     }
   };
 
-  if (isLoading) {
+  if (isLoading || data.length === 0) {
     return (
       <Paper elevation={2} sx={{ p: 2, height: height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Typography color="text.secondary">Loading chart data...</Typography>
+        <CircularProgress size={24} />
       </Paper>
     );
   }

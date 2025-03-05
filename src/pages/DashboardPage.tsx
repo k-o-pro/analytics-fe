@@ -127,7 +127,7 @@ const DashboardPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedRange]);
+  }, [selectedProperty, selectedRange]); 
 
   // Initialize date ranges
   useEffect(() => {
@@ -146,6 +146,20 @@ const DashboardPage: React.FC = () => {
 
   const handlePropertyChange = (property: string) => {
     setSelectedProperty(property);
+    setSummaryMetrics({
+      clicks: 0,
+      impressions: 0, 
+      ctr: 0,
+      position: 0
+    });
+    setPreviousSummaryMetrics({
+      clicks: 0,
+      impressions: 0,
+      ctr: 0, 
+      position: 0
+    });
+    setPerformanceData([]);
+    setError(null);
   };
 
   const handleDateRangeChange = (range: DateRange) => {

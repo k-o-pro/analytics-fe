@@ -60,6 +60,18 @@ const MetricCard: React.FC<MetricCardProps> = ({
     return <TrendingDown color="error" />;
   };
 
+  const renderValue = () => {
+    if (isLoading || value === 0) {
+      return '—';
+    }
+    return formatValue(value);
+  };
+  
+  // In JSX:
+  <Typography variant="h4" component="div" sx={{ mt: 1, fontWeight: 500 }}>
+    {renderValue()}
+  </Typography>
+
   // Delta color: green for positive change, red for negative, grey for neutral
   // Note: For position metrics, lower is better, so colors are reversed
   const getDeltaColor = () => {
