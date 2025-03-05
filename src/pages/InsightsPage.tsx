@@ -35,7 +35,7 @@ import {
 import PropertySelector from '../components/dashboard/PropertySelector';
 import DateRangePicker from '../components/dashboard/DateRangePicker';
 import { gscService, DateRange, GSCProperty } from '../services/gscService';
-import { InsightResponse, } from '../services/insightsService';
+import { insightsService, InsightResponse } from '../services/insightsService';
 import { creditsService } from '../services/creditsService';
 
 // Mock function to generate insights
@@ -211,10 +211,15 @@ const InsightsPage: React.FC = () => {
   const fetchData = useCallback(async () => {
     if (!selectedProperty) return;
     try {
-      const response = await gscService.generateInsights({
+      const response = await insightsService.generateInsights({
         siteUrl: selectedProperty.siteUrl,
+        period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
+        data: null // Add any additional data needed for insights
       });
+      setInsights(response);
     } catch (error) {
+      console.error('Failed to generate insights:', error);
+      setError('Failed to generate insights. Please try again.');
     }
   }, [selectedProperty, selectedRange]);
 
