@@ -9,51 +9,6 @@ import MetricCard from '../components/visualizations/MetricCard';
 import PerformanceChart from '../components/visualizations/PerformanceChart';
 import { gscService, DateRange } from '../services/gscService';
 
-// Generate mock data for demo purposes
-const generateMockData = (startDate: string, endDate: string, property: string) => {
-  const result = [];
-  let current = new Date(startDate);
-  const end = new Date(endDate);
-  
-  // Use property URL to generate unique but consistent seed
-  const seed = property.split('.').length;
-  
-  // Base values that will be unique per property
-  let clicks = 100 * seed;
-  let impressions = 1000 * seed;
-  let position = 20 - seed;
-  
-  
-  // Add a data point for each day
-  while (current <= end) {
-    // Random factors
-    const dayFactor = 0.9 + Math.random() * 0.2;
-    const dateFactor = 1 + (current.getDay() % 3) * 0.1; // Weekend boost
-    
-    // Calculate metrics with some randomness and trends
-    const dayClicks = Math.round(clicks * dayFactor * dateFactor);
-    const dayImpressions = Math.round(impressions * dayFactor * dateFactor);
-    const dayCtr = dayClicks / dayImpressions;
-    const dayPosition = Math.max(1, position * (0.95 + Math.random() * 0.1));
-    
-    result.push({
-      date: format(current, 'yyyy-MM-dd'),
-      clicks: dayClicks,
-      impressions: dayImpressions,
-      ctr: dayCtr,
-      position: dayPosition
-    });
-    
-    // Update for next day with slight upward trend
-    current.setDate(current.getDate() + 1);
-    clicks = Math.round(clicks * 1.01);
-    impressions = Math.round(impressions * 1.01);
-    position = Math.max(1, position * 0.995);
-  }
-  
-  return result;
-};
-
 // Calculate summary metrics
 const calculateSummaryMetrics = (data: any[]) => {
   if (!data.length) return { clicks: 0, impressions: 0, ctr: 0, position: 0 };
