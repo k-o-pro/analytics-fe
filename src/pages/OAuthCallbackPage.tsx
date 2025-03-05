@@ -99,14 +99,42 @@ const OAuthCallbackPage: React.FC = () => {
         
         // Check auth status - might need to redirect if not logged in
         if (!isUserAuthenticated) {
-          addDebug('🔄 User not authenticated, redirecting to login');
-          navigate('/login', { 
-            state: { 
-              redirectAfterLogin: '/oauth-callback',
-              message: 'Please log in to connect your Google Search Console account' 
-            } 
-          });
-          return;
+          addDebug('🔄 User not authenticated, trying to handle silent login or redirect');
+          // Try to see if we have stored credentials we can use
+          const storedEmail = localStorage.getItem('userEmail');
+          const storedPassword = sessionStorage.getItem('tempAuthPass');
+          
+          // If we have stored credentials, attempt silent login
+          if (storedEmail && storedPassword) {
+            addDebug('🔐 Attempting silent login with stored credentials');
+            try {
+              await login(storedEmail, storedPassword);
+              // Clear the temporary password from session storage for security
+              sessionStorage.removeItem('tempAuthPass');
+              addDebug('✅ Silent login successful, continuing with OAuth flow');
+              // Set the authenticated state
+              isUserAuthenticated = true;
+            } catch (loginError) {
+              addDebug('❌ Silent login failed, redirecting to login page');
+              // Redirect to login if silent login fails
+              navigate('/login', { 
+                state: { 
+                  redirectAfterLogin: '/oauth-callback',
+                  message: 'Please log in to connect your Google Search Console account' 
+                } 
+              });
+              return;
+            }
+          } else {
+            addDebug('🔄 No stored credentials found, redirecting to login');
+            navigate('/login', { 
+              state: { 
+                redirectAfterLogin: '/oauth-callback',
+                message: 'Please log in to connect your Google Search Console account' 
+              } 
+            });
+            return;
+          }
         }
         
         addDebug('✅ User authenticated, proceeding with OAuth callback');

@@ -94,13 +94,19 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       const { token } = response.data;
       
       localStorage.setItem('token', token);
+      // Also store the user email for potential silent login scenarios
+      // This doesn't expose sensitive data as it's just the email
+      localStorage.setItem('userEmail', email);
       api.setAuthToken(token);
       
       const decoded = jwtDecode<User>(token);
       setUser(decoded);
       
+      console.log('Login successful for:', email);
+      
       return;
     } catch (error) {
+      console.error('Login failed:', error);
       throw new Error('Invalid credentials');
     }
   };

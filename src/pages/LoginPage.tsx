@@ -32,10 +32,35 @@ const LoginPage: React.FC = () => {
     try {
       setError('');
       setLoading(true);
+      
+      // Check if we're coming from the OAuth flow
+      const queryParams = new URLSearchParams(window.location.search);
+      const redirectParam = queryParams.get('redirect');
+      const isOAuthRedirect = redirectParam === 'connect-gsc' || 
+                              window.location.state?.redirectAfterLogin === '/oauth-callback';
+      
+      // If this is part of the OAuth flow, temporarily store the password in sessionStorage
+      // This is used for potential silent login during the OAuth callback
+      if (isOAuthRedirect) {
+        console.log('Login is part of OAuth flow, storing temporary credentials');
+        // This is cleared once used or when the session ends
+        sessionStorage.setItem('tempAuthPass', password);
+      }
+      
       await login(email, password);
-      navigate('/dashboard');
+      
+      // If there's a redirect parameter, go there
+      if (redirectParam) {
+        navigate(`/${redirectParam}`);
+      } else if (window.location.state?.redirectAfterLogin) {
+        navigate(window.location.state.redirectAfterLogin);
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setError('Invalid email or password. Please try again.');
+      // Clean up any stored temporary credentials on failure
+      sessionStorage.removeItem('tempAuthPass');
     } finally {
       setLoading(false);
     }
