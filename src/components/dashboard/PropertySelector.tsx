@@ -16,8 +16,8 @@ import { useNavigate } from 'react-router-dom';
 import { gscService, GSCProperty } from '../../services/gscService';
 
 interface PropertySelectorProps {
-  selectedProperty: string;
-  onPropertyChange: (property: string) => void;
+  selectedProperty: GSCProperty | null;
+  onPropertyChange: (property: GSCProperty) => void;
 }
 
 const PropertySelector: React.FC<PropertySelectorProps> = ({
@@ -36,7 +36,7 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
       const gscProperties = await gscService.getProperties();
       
       if (!selectedProperty && gscProperties.length > 0) {
-        onPropertyChange(gscProperties[0].siteUrl);
+        onPropertyChange(gscProperties[0]);
       }
       
       setProperties(gscProperties);
@@ -53,7 +53,10 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
   }, [fetchProperties]); // Add fetchProperties to dependency array
 
   const handlePropertyChange = (event: SelectChangeEvent<string>) => {
-    onPropertyChange(event.target.value);
+    const property = properties.find(p => p.siteUrl === event.target.value);
+    if (property) {
+      onPropertyChange(property);
+    }
   };
 
   const handleAddProperty = () => {
@@ -106,7 +109,7 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
         <Select
           labelId="property-select-label"
           id="property-select"
-          value={selectedProperty}
+          value={selectedProperty?.siteUrl || ''}
           onChange={handlePropertyChange}
           label="Property"
         >

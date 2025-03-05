@@ -28,12 +28,12 @@ import { useNavigate } from 'react-router-dom';
 
 import PropertySelector from '../components/dashboard/PropertySelector';
 import DateRangePicker from '../components/dashboard/DateRangePicker';
-import { gscService, DateRange, TopPage } from '../services/gscService';
+import { gscService, DateRange, TopPage, GSCProperty } from '../services/gscService';
 import { creditsService } from '../services/creditsService';
 
 const TopPagesPage: React.FC = () => {
   const navigate = useNavigate();
-  const [selectedProperty, setSelectedProperty] = useState('');
+  const [selectedProperty, setSelectedProperty] = useState<GSCProperty | null>(null);
   const [dateRanges, setDateRanges] = useState<DateRange[]>([]);
   const [selectedRange, setSelectedRange] = useState<DateRange>({
     startDate: '',
@@ -104,7 +104,7 @@ const TopPagesPage: React.FC = () => {
     }
   };
 
-  const handlePropertyChange = (property: string) => {
+  const handlePropertyChange = (property: GSCProperty) => {
     setSelectedProperty(property);
     setPage(0); // Reset to first page when changing property
   };
