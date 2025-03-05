@@ -1,5 +1,6 @@
 import { API_URL } from '../config';
 import { getToken } from '../utils/auth';
+import { api } from './api';
 
 interface SearchAnalyticsParams {
   startDate: string;
