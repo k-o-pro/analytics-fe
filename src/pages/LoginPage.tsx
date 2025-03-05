@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -20,6 +20,7 @@ const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,10 +35,11 @@ const LoginPage: React.FC = () => {
       setLoading(true);
       
       // Check if we're coming from the OAuth flow
-      const queryParams = new URLSearchParams(window.location.search);
+      const queryParams = new URLSearchParams(location.search);
       const redirectParam = queryParams.get('redirect');
+      const locationState = location.state as { redirectAfterLogin?: string } | null;
       const isOAuthRedirect = redirectParam === 'connect-gsc' || 
-                              window.location.state?.redirectAfterLogin === '/oauth-callback';
+                              locationState?.redirectAfterLogin === '/oauth-callback';
       
       // If this is part of the OAuth flow, temporarily store the password in sessionStorage
       // This is used for potential silent login during the OAuth callback
@@ -52,8 +54,8 @@ const LoginPage: React.FC = () => {
       // If there's a redirect parameter, go there
       if (redirectParam) {
         navigate(`/${redirectParam}`);
-      } else if (window.location.state?.redirectAfterLogin) {
-        navigate(window.location.state.redirectAfterLogin);
+      } else if (locationState?.redirectAfterLogin) {
+        navigate(locationState.redirectAfterLogin);
       } else {
         navigate('/dashboard');
       }
