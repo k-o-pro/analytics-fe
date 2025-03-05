@@ -115,23 +115,56 @@ export const gscService = {
       // Make sure token is set in api
       if (token) {
         api.setAuthToken(token);
-      }
-      
-      // Send the code to the backend for token exchange
-      const response = await api.post<OAuthCallbackResponse>('/auth/callback', { 
-        code,
-        state: 'callback' // Include state parameter for validation
-      });
-      
-      console.log('OAuth callback response:', response.status, response.data);
-      
-      if (response.data && response.data.success) {
-        console.log('OAuth callback successful');
-        return true;
+        console.log('Auth token set in API service');
       } else {
-        console.error('OAuth callback returned success=false:', response.data);
+        console.error('NO AUTH TOKEN AVAILABLE! OAuth will fail');
         return false;
       }
+      
+      // Add retry logic for potential network issues
+      let retries = 0;
+      const maxRetries = 2;
+      
+      while (retries <= maxRetries) {
+        try {
+          console.log(`Attempt ${retries + 1} to send OAuth code to backend`);
+          
+          // Send the code to the backend for token exchange
+          const response = await api.post<OAuthCallbackResponse>('/auth/callback', { 
+            code,
+            state: 'callback' // Include state parameter for validation
+          });
+          
+          console.log('OAuth callback response:', response.status, response.data);
+          
+          if (response.data && response.data.success) {
+            console.log('OAuth callback successful');
+            return true;
+          } else {
+            console.error('OAuth callback returned success=false:', response.data);
+            return false;
+          }
+        } catch (attemptError) {
+          retries++;
+          console.error(`Attempt ${retries} failed:`, attemptError);
+          
+          // Check if it's an auth error
+          if ((attemptError as any).response?.status === 401) {
+            console.log('Authentication error detected, checking token');
+            // Short delay before retry
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          } else if (retries >= maxRetries) {
+            // If we've exhausted retries, re-throw the error
+            throw attemptError;
+          } else {
+            // Wait longer between other types of errors
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+      }
+      
+      // If we get here, all retries failed
+      return false;
     } catch (error) {
       console.error('OAuth callback error:', error);
       
@@ -139,11 +172,12 @@ export const gscService = {
       if (error && (error as any).response) {
         const responseData = (error as any).response.data;
         console.error('Error response data:', responseData);
+        const statusCode = (error as any).response.status;
+        console.error('Error status code:', statusCode);
         
         // If authentication required error, we need to redirect to login
-        if (responseData?.authRequired) {
-          console.log('Authentication required, redirecting to login');
-          // This will be caught by the component and redirect
+        if (responseData?.authRequired || statusCode === 401) {
+          console.log('Authentication required, will redirect to login');
           throw new Error('Authentication required');
         }
       }

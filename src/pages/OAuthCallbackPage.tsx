@@ -3,13 +3,15 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Box, Typography, CircularProgress, Alert, Paper, Container, Button } from '@mui/material';
 import { gscService } from '../services/gscService';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../services/api';
 
 const OAuthCallbackPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, checkAuthState } = useAuth();
+  const { isAuthenticated, checkAuthState, login } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -35,6 +37,8 @@ const OAuthCallbackPage: React.FC = () => {
         console.log('- Search params:', location.search);
         console.log('- Hash:', location.hash);
         console.log('- Code present:', code ? 'Yes' : 'No');
+        console.log('- Auth state:', isAuthenticated ? 'Authenticated' : 'Not authenticated');
+        console.log('- Token present:', localStorage.getItem('token') ? 'Yes' : 'No');
         
         // If there's an error parameter, display it
         const errorMsg = queryParams.get('error');
@@ -46,20 +50,43 @@ const OAuthCallbackPage: React.FC = () => {
         }
         
         if (!code) {
-          console.error('No authorization code found in URL parameters');
-          setError('No authorization code was returned from Google. Please try again.');
-          setLoading(false);
-          return;
+          // Check if we have a stored code from a previous attempt
+          const storedCode = sessionStorage.getItem('pending_oauth_code');
+          if (storedCode) {
+            console.log('Retrieved stored authorization code from session storage');
+            code = storedCode;
+            if (!isRetrying) {
+              setIsRetrying(true);
+            }
+          } else {
+            console.error('No authorization code found in URL parameters or session storage');
+            setError('No authorization code was returned from Google. Please try again.');
+            setLoading(false);
+            return;
+          }
+        } else {
+          // Store code in case we need it after a redirect
+          sessionStorage.setItem('pending_oauth_code', code);
         }
         
-        // Force check auth state from localStorage - this handles redirects properly
-        const isUserAuthenticated = checkAuthState();
+        // Check auth state
+        const token = localStorage.getItem('token');
+        let isUserAuthenticated = !!token;
+        
+        // Double check with auth context
+        if (!isUserAuthenticated) {
+          isUserAuthenticated = checkAuthState();
+        }
+        
+        // Ensure the token is set in the API
+        if (token) {
+          console.log('Setting auth token in API');
+          api.setAuthToken(token);
+        }
         
         // Check auth status - might need to redirect if not logged in
         if (!isUserAuthenticated) {
-          console.log('User not authenticated after auth state check, redirecting to login');
-          // Save the auth code in session storage before redirecting to login
-          sessionStorage.setItem('pending_oauth_code', code);
+          console.log('User not authenticated, redirecting to login');
           navigate('/login', { 
             state: { 
               redirectAfterLogin: '/oauth-callback',
@@ -70,15 +97,6 @@ const OAuthCallbackPage: React.FC = () => {
         }
         
         console.log('User authenticated, proceeding with OAuth callback');
-        
-        // Retrieve stored code if we were redirected back after login
-        const storedCode = sessionStorage.getItem('pending_oauth_code');
-        if (storedCode && !code) {
-          code = storedCode;
-          // Clear stored code after using it
-          sessionStorage.removeItem('pending_oauth_code');
-        }
-        
         console.log('Sending code to backend for processing...');
         
         // Process the OAuth callback
@@ -90,6 +108,9 @@ const OAuthCallbackPage: React.FC = () => {
           setLoading(false);
           return;
         }
+        
+        // Clear stored code on success
+        sessionStorage.removeItem('pending_oauth_code');
         
         // Clear loading and navigate after successful connection
         setLoading(false);
@@ -107,7 +128,7 @@ const OAuthCallbackPage: React.FC = () => {
     };
 
     handleCallback();
-  }, [navigate, location, isAuthenticated, checkAuthState]);
+  }, [navigate, location, isAuthenticated, checkAuthState, isRetrying]);
 
   const handleRetry = () => {
     window.location.href = gscService.getAuthUrl();

@@ -30,21 +30,36 @@ instance.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    if (error.response.status === 401 && !originalRequest._retry) {
+    // Only attempt refresh if error is 401 and not already retried
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log('401 error detected, attempting token refresh');
       originalRequest._retry = true;
       try {
         // Try to refresh token
         const refreshResponse = await instance.post('/auth/refresh');
         const { token } = refreshResponse.data;
         localStorage.setItem('token', token);
+        console.log('Token refreshed successfully');
         
         // Retry original request with new token
         originalRequest.headers['Authorization'] = `Bearer ${token}`;
         return instance(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, redirect to login
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+        console.error('Token refresh failed:', refreshError);
+        // Don't remove token during OAuth flow to prevent auth state loss
+        const isOAuthFlow = window.location.pathname.includes('oauth-callback');
+        if (!isOAuthFlow) {
+          console.log('Not in OAuth flow, clearing token');
+          localStorage.removeItem('token');
+          // Use React Router instead of direct location change to maintain state
+          setTimeout(() => {
+            if (window.location.pathname !== '/login') {
+              window.location.href = '/login';
+            }
+          }, 100);
+        } else {
+          console.log('In OAuth flow, preserving token state');
+        }
         return Promise.reject(refreshError);
       }
     }
