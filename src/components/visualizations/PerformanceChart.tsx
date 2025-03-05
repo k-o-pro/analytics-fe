@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   TooltipProps
 } from 'recharts';
-import { Paper, Typography, Box, useTheme } from '@mui/material';
+import { Paper, Typography, Box, useTheme, CircularProgress } from '@mui/material';
 import { format, parseISO } from 'date-fns';
 
 interface DataPoint {
