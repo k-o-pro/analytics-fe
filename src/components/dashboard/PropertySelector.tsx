@@ -52,23 +52,8 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
     fetchProperties();
   }, [fetchProperties]); // Add fetchProperties to dependency array
 
-  const handlePropertyChange = (property: string) => {
-    setSelectedProperty(property);
-    // Reset states when property changes
-    setSummaryMetrics({
-      clicks: 0,
-      impressions: 0, 
-      ctr: 0,
-      position: 0
-    });
-    setPreviousSummaryMetrics({
-      clicks: 0,
-      impressions: 0,
-      ctr: 0, 
-      position: 0
-    });
-    setPerformanceData([]);
-    setError(null);
+  const handlePropertyChange = (event: SelectChangeEvent<string>) => {
+    onPropertyChange(event.target.value);
   };
 
   const handleAddProperty = () => {
