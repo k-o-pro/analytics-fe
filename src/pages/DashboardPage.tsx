@@ -6,7 +6,7 @@ import PropertySelector from '../components/dashboard/PropertySelector';
 import DateRangePicker from '../components/dashboard/DateRangePicker';
 import MetricCard from '../components/visualizations/MetricCard';
 import PerformanceChart from '../components/visualizations/PerformanceChart';
-import { gscService, DateRange } from '../services/gscService';
+import { gscService, DateRange, GSCProperty } from '../services/gscService';
 
 // Helper function to calculate summary metrics from GSC data
 const calculateSummaryMetrics = (rows: any[]) => {
@@ -41,7 +41,7 @@ const calculateSummaryMetrics = (rows: any[]) => {
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const [selectedProperty, setSelectedProperty] = useState('');
+  const [selectedProperty, setSelectedProperty] = useState<GSCProperty | null>(null);
   const [dateRanges, setDateRanges] = useState<DateRange[]>([]);
   const [selectedRange, setSelectedRange] = useState<DateRange>({
     startDate: '',
@@ -65,6 +65,7 @@ const DashboardPage: React.FC = () => {
   });
 
   const fetchPerformanceData = useCallback(async () => {
+    if (!selectedProperty) return;
     try {
       setLoading(true);
       setError(null);
@@ -75,14 +76,14 @@ const DashboardPage: React.FC = () => {
   
       // Fetch current period data
       const currentResponse = await gscService.fetchMetrics({
-        siteUrl: selectedProperty,
+        siteUrl: selectedProperty.siteUrl,
         startDate: selectedRange.startDate,
         endDate: selectedRange.endDate
       });
   
       // Fetch previous period data
       const previousResponse = await gscService.fetchMetrics({
-        siteUrl: selectedProperty,
+        siteUrl: selectedProperty.siteUrl,
         startDate: prevStartDate,
         endDate: prevEndDate
       });
@@ -117,7 +118,7 @@ const DashboardPage: React.FC = () => {
   }, [selectedProperty, selectedRange, fetchPerformanceData]); // Add fetchPerformanceData
   
 
-  const handlePropertyChange = (property: string) => {
+  const handlePropertyChange = (property: GSCProperty) => {
     setSelectedProperty(property);
     setSummaryMetrics({
       clicks: 0,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   Box,
@@ -34,7 +34,7 @@ import {
 
 import PropertySelector from '../components/dashboard/PropertySelector';
 import DateRangePicker from '../components/dashboard/DateRangePicker';
-import { gscService, DateRange } from '../services/gscService';
+import { gscService, DateRange, GSCProperty } from '../services/gscService';
 import { InsightResponse, } from '../services/insightsService';
 import { creditsService } from '../services/creditsService';
 
@@ -92,7 +92,7 @@ const generateMockInsights = (): InsightResponse => {
 const InsightsPage: React.FC = () => {
   const location = useLocation();
   const theme = useTheme();
-  const [selectedProperty, setSelectedProperty] = useState('');
+  const [selectedProperty, setSelectedProperty] = useState<GSCProperty | null>(null);
   const [dateRanges, setDateRanges] = useState<DateRange[]>([]);
   const [selectedRange, setSelectedRange] = useState<DateRange>({
     startDate: '',
@@ -143,7 +143,7 @@ const InsightsPage: React.FC = () => {
     }
   };
 
-  const handlePropertyChange = (property: string) => {
+  const handlePropertyChange = (property: GSCProperty) => {
     setSelectedProperty(property);
     // Reset insights when property changes
     setInsights(null);
@@ -207,6 +207,16 @@ const InsightsPage: React.FC = () => {
         return <ArrowDownward sx={{ color: theme.palette.success.main }} />;
     }
   };
+
+  const fetchData = useCallback(async () => {
+    if (!selectedProperty) return;
+    try {
+      const response = await gscService.generateInsights({
+        siteUrl: selectedProperty.siteUrl,
+      });
+    } catch (error) {
+    }
+  }, [selectedProperty, selectedRange]);
 
   return (
     <Box>
