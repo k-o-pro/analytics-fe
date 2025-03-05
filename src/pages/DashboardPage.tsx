@@ -69,35 +69,49 @@ const DashboardPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-  
+
+      console.log('Fetching performance data for:', {
+        property: selectedProperty.siteUrl,
+        dateRange: selectedRange
+      });
+
       // Get previous period date range
       const { startDate: prevStartDate, endDate: prevEndDate } = 
         gscService.getPreviousPeriod(selectedRange.startDate, selectedRange.endDate);
-  
+
       // Fetch current period data
       const currentResponse = await gscService.fetchMetrics({
         siteUrl: selectedProperty.siteUrl,
         startDate: selectedRange.startDate,
         endDate: selectedRange.endDate
       });
-  
+
       // Fetch previous period data
       const previousResponse = await gscService.fetchMetrics({
         siteUrl: selectedProperty.siteUrl,
         startDate: prevStartDate,
         endDate: prevEndDate
       });
-  
+
+      if (!currentResponse.rows?.length) {
+        console.warn('No data received for current period');
+        setError('No data available for the selected date range');
+        return;
+      }
+
       // Calculate metrics for both periods
-      const currentMetrics = calculateSummaryMetrics(currentResponse.rows || []);
+      const currentMetrics = calculateSummaryMetrics(currentResponse.rows);
       const previousMetrics = calculateSummaryMetrics(previousResponse.rows || []);
       
+      console.log('Calculated metrics:', { currentMetrics, previousMetrics });
+
       setSummaryMetrics(currentMetrics);
       setPreviousSummaryMetrics(previousMetrics);
-      setPerformanceData(currentResponse.rows || []);
-  
+      setPerformanceData(currentResponse.rows);
+
     } catch (err) {
-      setError('Failed to load performance data');
+      console.error('Failed to load performance data:', err);
+      setError('Failed to load performance data. Please check the console for details.');
     } finally {
       setLoading(false);
     }

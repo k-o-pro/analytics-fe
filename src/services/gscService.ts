@@ -258,8 +258,20 @@ export const gscService = {
 
   // Fetch GSC metrics data
   fetchMetrics: async (request: GSCMetricsRequest): Promise<GSCResponse> => {
-    const response = await api.post<GSCResponse>('/gsc/data', request);
-    return response.data;
+    try {
+      console.log('Fetching GSC metrics:', request); // Debug log
+      const response = await api.post<GSCResponse>('/gsc/data', {
+        ...request,
+        dimensions: ['date'], // Add date dimension for time series
+        rowLimit: 100 // Ensure we get enough data points
+      });
+      
+      console.log('GSC metrics response:', response.data); // Debug log
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching GSC metrics:', error);
+      throw error;
+    }
   },
 
   // Get top pages with performance data
