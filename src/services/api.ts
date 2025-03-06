@@ -26,11 +26,7 @@ instance.interceptors.request.use(
 // Response interceptor for API calls
 instance.interceptors.response.use(
   (response) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
+    return response;
   },
   async (error) => {
     const originalRequest = error.config;
