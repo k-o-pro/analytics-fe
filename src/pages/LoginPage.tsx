@@ -34,6 +34,8 @@ const LoginPage: React.FC = () => {
       setError('');
       setLoading(true);
       
+      console.log('Attempting login with email:', email);
+      
       // Check if we're coming from the OAuth flow
       const queryParams = new URLSearchParams(location.search);
       const redirectParam = queryParams.get('redirect');
@@ -51,6 +53,8 @@ const LoginPage: React.FC = () => {
       
       await login(email, password);
       
+      console.log('Login successful, redirecting...');
+      
       // If there's a redirect parameter, go there
       if (redirectParam) {
         navigate(`/${redirectParam}`);
@@ -59,8 +63,18 @@ const LoginPage: React.FC = () => {
       } else {
         navigate('/dashboard');
       }
-    } catch (err) {
-      setError('Invalid email or password. Please try again.');
+    } catch (err: any) {
+      console.error('Login error details:', err);
+      
+      // Display more specific error message if available
+      if (err.message.includes('Network Error')) {
+        setError('Cannot connect to the server. Please check your internet connection and try again.');
+      } else if (err.message.includes('401')) {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError(err.message || 'Login failed. Please try again.');
+      }
+      
       // Clean up any stored temporary credentials on failure
       sessionStorage.removeItem('tempAuthPass');
     } finally {
