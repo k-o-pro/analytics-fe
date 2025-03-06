@@ -30,7 +30,15 @@ instance.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    // Only attempt refresh if error is 401 and not already retried
+    
+    // Add better error logging
+    console.error('API Error:', {
+      status: error.response?.status,
+      url: originalRequest.url,
+      method: originalRequest.method,
+      error: error.message
+    });
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       console.log('401 error detected, attempting token refresh');
       originalRequest._retry = true;
@@ -63,7 +71,13 @@ instance.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-    return Promise.reject(error);
+
+    // Ensure we always reject with a meaningful error
+    return Promise.reject({
+      message: error.response?.data?.error || error.message,
+      status: error.response?.status,
+      originalError: error
+    });
   }
 );
 

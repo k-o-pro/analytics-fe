@@ -93,9 +93,11 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       const response = await api.post<LoginResponse>('/auth/login', { email, password });
       const { token } = response.data;
       
+      if (!token) {
+        throw new Error('No token received from server');
+      }
+
       localStorage.setItem('token', token);
-      // Also store the user email for potential silent login scenarios
-      // This doesn't expose sensitive data as it's just the email
       localStorage.setItem('userEmail', email);
       api.setAuthToken(token);
       
@@ -103,11 +105,13 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       setUser(decoded);
       
       console.log('Login successful for:', email);
-      
-      return;
-    } catch (error) {
-      console.error('Login failed:', error);
-      throw new Error('Invalid credentials');
+    } catch (error: any) {
+      console.error('Login failed:', {
+        message: error.message,
+        status: error.status,
+        details: error.originalError
+      });
+      throw new Error(error.message || 'Login failed. Please try again.');
     }
   };
 
