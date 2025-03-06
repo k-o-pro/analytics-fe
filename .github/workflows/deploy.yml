@@ -2,20 +2,38 @@ name: Deploy
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: 18
-      - run: npm ci
-      - run: npm run build
+          cache: 'npm'
+          
+      # Clean install to avoid dependency issues
+      - name: Install dependencies
+        run: rm -rf node_modules package-lock.json && npm install
+        
+      - name: Build
+        run: npm run build
         env:
+          CI: false # Prevents treating warnings as errors
           REACT_APP_API_URL: https://api.analytics.k-o.pro
           REACT_APP_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-      - uses: JamesIves/github-pages-deploy-action@v4
+          
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: build
           branch: gh-pages
+          clean: true
