@@ -90,10 +90,14 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('Attempting login to API at:', api);
       const response = await api.post<LoginResponse>('/auth/login', { email, password });
+      
+      console.log('Login response received:', response.status);
       const { token } = response.data;
       
       if (!token) {
+        console.error('No token in response:', response.data);
         throw new Error('No token received from server');
       }
 
@@ -109,9 +113,18 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       console.error('Login failed:', {
         message: error.message,
         status: error.status,
+        response: error.response,
         details: error.originalError
       });
-      throw new Error(error.message || 'Login failed. Please try again.');
+      
+      // More detailed error message based on the type of error
+      if (error.response?.status === 401) {
+        throw new Error('Invalid email or password');
+      } else if (error.message?.includes('Network Error')) {
+        throw new Error('Cannot connect to server. Please check your internet connection.');
+      } else {
+        throw new Error(error.message || 'Login failed. Please try again.');
+      }
     }
   };
 
