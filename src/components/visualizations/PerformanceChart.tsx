@@ -81,6 +81,12 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
 }) => {
   const theme = useTheme();
 
+  // Validate and format dates
+  const validData = data.map(item => ({
+    ...item,
+    date: item.date ? new Date(item.date).toISOString().split('T')[0] : ''
+  })).filter(item => item.date);
+
   const colorMap: Record<MetricType, string> = {
     clicks: theme.palette.primary.main,
     impressions: theme.palette.secondary.main,
@@ -123,19 +129,17 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
         {title}
       </Typography>
       <ResponsiveContainer width="100%" height={height}>
-        <LineChart
-          data={data}
-          margin={{
-            top: 5,
-            right: 30,
-            left: 20,
-            bottom: 5,
-          }}
-        >
+        <LineChart data={validData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis 
             dataKey="date" 
-            tickFormatter={(date) => format(parseISO(date), 'MMM d')}
+            tickFormatter={(date) => {
+              try {
+                return format(parseISO(date), 'MMM d');
+              } catch (e) {
+                return date;
+              }
+            }}
             minTickGap={30}
           />
           

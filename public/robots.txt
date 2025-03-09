@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://analytics.k-o.pro/sitemap.xml
