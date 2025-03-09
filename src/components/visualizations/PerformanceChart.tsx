@@ -85,17 +85,24 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
   const validData = React.useMemo(() => {
     return data
       .filter(item => {
-        // Ensure item has date and at least one metric with value
-        return item.date && metrics.some(metric => typeof item[metric] === 'number');
+        try {
+          // Validate date and metrics
+          const validDate = item.date && !isNaN(new Date(item.date).getTime());
+          const hasMetrics = metrics.some(metric => typeof item[metric] === 'number');
+          return validDate && hasMetrics;
+        } catch (e) {
+          console.error('Invalid data point:', item);
+          return false;
+        }
       })
       .map(item => ({
         ...item,
-        // Ensure date is in correct format
-        date: new Date(item.date).toISOString().split('T')[0],
+        // Format date consistently
+        date: format(new Date(item.date), 'yyyy-MM-dd'),
         // Ensure all metrics are numbers
         ...metrics.reduce((acc, metric) => ({
           ...acc,
-          [metric]: Number(item[metric]) || 0
+          [metric]: typeof item[metric] === 'number' ? item[metric] : 0
         }), {})
       }))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -165,13 +172,14 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis 
             dataKey="date" 
-            tickFormatter={(date) => {
-              if (!date) return '';
+            tickFormatter={(dateStr) => {
               try {
-                return format(parseISO(date), 'MMM d');
+                // Parse the already formatted date
+                const date = parseISO(dateStr);
+                return format(date, 'MMM d');
               } catch (e) {
                 console.error('Date formatting error:', e);
-                return date;
+                return '';
               }
             }}
             minTickGap={30}

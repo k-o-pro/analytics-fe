@@ -107,7 +107,18 @@ const DashboardPage: React.FC = () => {
 
       setSummaryMetrics(currentMetrics);
       setPreviousSummaryMetrics(previousMetrics);
-      setPerformanceData(currentResponse.rows);
+
+      // Format data before setting state
+      const formattedData = currentResponse.rows.map(row => ({
+        ...row,
+        date: new Date(row.keys[0]).toISOString().split('T')[0], // Ensure date is in correct format
+        clicks: Number(row.clicks) || 0,
+        impressions: Number(row.impressions) || 0,
+        ctr: Number(row.ctr) || 0,
+        position: Number(row.position) || 0
+      }));
+
+      setPerformanceData(formattedData);
 
     } catch (err) {
       console.error('Failed to load performance data:', err);
