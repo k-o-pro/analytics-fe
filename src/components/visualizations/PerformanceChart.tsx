@@ -81,11 +81,34 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
 }) => {
   const theme = useTheme();
 
-  // Validate and format dates
-  const validData = data.map(item => ({
-    ...item,
-    date: item.date ? new Date(item.date).toISOString().split('T')[0] : ''
-  })).filter(item => item.date);
+  // Better data validation and formatting
+  const validData = React.useMemo(() => {
+    return data
+      .filter(item => {
+        // Ensure item has date and at least one metric with value
+        return item.date && metrics.some(metric => typeof item[metric] === 'number');
+      })
+      .map(item => ({
+        ...item,
+        // Ensure date is in correct format
+        date: new Date(item.date).toISOString().split('T')[0],
+        // Ensure all metrics are numbers
+        ...metrics.reduce((acc, metric) => ({
+          ...acc,
+          [metric]: Number(item[metric]) || 0
+        }), {})
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [data, metrics]);
+
+  // Add console logs for debugging
+  React.useEffect(() => {
+    console.log('Chart data:', {
+      originalData: data,
+      validData,
+      metrics,
+    });
+  }, [data, validData, metrics]);
 
   const colorMap: Record<MetricType, string> = {
     clicks: theme.palette.primary.main,
@@ -115,10 +138,19 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
     }
   };
 
-  if (isLoading || data.length === 0) {
+  if (isLoading) {
     return (
-      <Paper elevation={2} sx={{ p: 2, height: height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Paper elevation={2} sx={{ p: 2, height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <CircularProgress size={24} />
+      </Paper>
+    );
+  }
+
+  // Show message if no valid data
+  if (!validData.length) {
+    return (
+      <Paper elevation={2} sx={{ p: 2, height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography color="text.secondary">No data available</Typography>
       </Paper>
     );
   }
@@ -134,9 +166,11 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
           <XAxis 
             dataKey="date" 
             tickFormatter={(date) => {
+              if (!date) return '';
               try {
                 return format(parseISO(date), 'MMM d');
               } catch (e) {
+                console.error('Date formatting error:', e);
                 return date;
               }
             }}
