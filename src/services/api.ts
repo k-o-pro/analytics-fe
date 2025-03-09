@@ -7,6 +7,11 @@ const instance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Add these settings for CORS
+  withCredentials: true,
+  validateStatus: (status) => {
+    return status >= 200 && status < 500;
+  }
 });
 
 // Request interceptor for API calls
