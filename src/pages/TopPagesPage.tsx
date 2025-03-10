@@ -327,7 +327,11 @@ const TopPagesPage: React.FC = () => {
                                 }
 
                                 // Combine base URL and page path
-                                return `${baseUrl}${pagePath}`;
+                                const fullUrl = `${baseUrl}${pagePath}`;
+                                
+                                // Verify we have a valid URL before returning
+                                console.log('Constructed URL:', fullUrl);
+                                return fullUrl;
                               } catch (err) {
                                 console.error('Error constructing URL:', err);
                                 return '#';

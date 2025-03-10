@@ -119,7 +119,16 @@ const InsightsPage: React.FC = () => {
       const response = await insightsService.generateInsights({
         siteUrl: selectedProperty.siteUrl,
         period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
-        data: null // Add any additional data needed for insights
+        data: {
+          // Include basic data to help OpenAI generate insights
+          property: selectedProperty.name || selectedProperty.siteUrl,
+          targetPageUrl: targetPageUrl || null,
+          dateRange: {
+            start: selectedRange.startDate,
+            end: selectedRange.endDate,
+            label: selectedRange.label
+          }
+        }
       });
       
       setInsights(response);
