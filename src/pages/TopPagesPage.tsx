@@ -299,11 +299,23 @@ const TopPagesPage: React.FC = () => {
                         <Tooltip title="Open in new tab">
                           <IconButton 
                             size="small" 
-                            href={selectedProperty?.siteUrl && page.url ? 
-                              // Handle both absolute and relative URLs
-                              page.url.startsWith('http') ? page.url : `${selectedProperty.siteUrl}${page.url}`
-                              : '#'
-                            } 
+                            href={(() => {
+                              if (!selectedProperty?.siteUrl || !page.url) return '#';
+                              try {
+                                // If page.url is absolute, use it directly
+                                if (page.url.match(/^https?:\/\//)) {
+                                  return page.url;
+                                }
+                                // Otherwise, combine with the site URL
+                                const baseUrl = new URL(selectedProperty.siteUrl);
+                                // Remove trailing slash from base and leading slash from path
+                                const basePath = baseUrl.pathname.replace(/\/$/, '');
+                                const pagePath = page.url.replace(/^\//, '');
+                                return `${baseUrl.origin}${basePath}/${pagePath}`;
+                              } catch {
+                                return '#';
+                              }
+                            })()}
                             target="_blank"
                             rel="noopener noreferrer"
                             sx={{ ml: 1 }}
