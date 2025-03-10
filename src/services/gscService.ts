@@ -288,7 +288,15 @@ export const gscService = {
       limit: limit.toString()
     });
 
+    console.log('Fetching top pages with params:', {
+      siteUrl,
+      startDate,
+      endDate,
+      limit
+    });
+
     const response = await api.get<TopPagesResponse>(`/gsc/top-pages?${params}`);
+    console.log('Top pages response:', response.data); // Add debug logging
     return response.data;
   },
 

@@ -64,6 +64,7 @@ const TopPagesPage: React.FC = () => {
         (page + 1) * rowsPerPage // requested limit
       );
 
+      console.log('Received top pages data:', response.pages); // Add debug logging
       setTopPages(response.pages);
       setTotalPages(response.pages.length);
       
@@ -294,71 +295,23 @@ const TopPagesPage: React.FC = () => {
                     <TableCell>
                       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                         {(() => {
-                          // Function to construct full URL from property and page URL
-                          const constructFullUrl = (propertyUrl: string, pageUrl: string): string => {
-                            if (!propertyUrl || !pageUrl) return pageUrl || '#';
-                            
-                            try {
-                              // Case 1: page URL is already absolute
-                              if (pageUrl.match(/^https?:\/\//i)) {
-                                return pageUrl;
-                              }
-                              
-                              // Parse the property URL to get domain
-                              let baseUrl = propertyUrl;
-                              try {
-                                const urlObj = new URL(propertyUrl);
-                                baseUrl = `${urlObj.protocol}//${urlObj.host}`;
-                              } catch (e) {
-                                console.error('Invalid property URL format:', propertyUrl);
-                                return pageUrl; // Fall back to page URL if property URL is invalid
-                              }
-                              
-                              // Ensure base URL ends with slash
-                              if (!baseUrl.endsWith('/')) {
-                                baseUrl += '/';
-                              }
-                              
-                              // Normalize page path
-                              let pagePath = pageUrl;
-                              if (pagePath.startsWith('/')) {
-                                pagePath = pagePath.substring(1);
-                              }
-                              
-                              // Construct final URL
-                              return baseUrl + pagePath;
-                            } catch (err) {
-                              console.error('Error constructing URL:', err);
-                              return pageUrl; // Fall back to page URL if construction fails
-                            }
-                          };
-
-                          const fullUrl = constructFullUrl(
-                            selectedProperty?.siteUrl || '',
-                            page.url
-                          );
-                          
+                          console.log('Page URL:', page.url); // Add debug logging
                           return (
                             <>
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <Typography 
                                   variant="body2" 
                                   component="a"
-                                  href={fullUrl}
+                                  href={page.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   sx={{ 
                                     maxWidth: '100%',
                                     textDecoration: 'none',
                                     color: 'primary.main',
+                                    wordBreak: 'break-all',
                                     '&:hover': {
                                       textDecoration: 'underline'
-                                    }
-                                  }}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    if (fullUrl !== '#') {
-                                      window.open(fullUrl, '_blank', 'noopener,noreferrer');
                                     }
                                   }}
                                 >
