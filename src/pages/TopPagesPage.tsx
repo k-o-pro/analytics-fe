@@ -304,13 +304,9 @@ const TopPagesPage: React.FC = () => {
                         maxWidth: '400px'
                       }}>
                         {(() => {
-                          if (!page?.url) {
-                            console.warn('Missing URL for page:', page);
-                            return null;
-                          }
+                          // Add debug logging
+                          console.log('Page data:', page);
 
-                          console.log('Rendering URL:', page.url);
-                          
                           return (
                             <Box sx={{ 
                               display: 'flex', 
@@ -328,13 +324,16 @@ const TopPagesPage: React.FC = () => {
                                   whiteSpace: 'nowrap'
                                 }}
                               >
-                                {page.url}
+                                {page.url || (page.keys && page.keys[0]) || 'N/A'}
                               </Typography>
                               <IconButton
                                 size="small"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  window.open(page.url, '_blank', 'noopener,noreferrer');
+                                  const url = page.url || (page.keys && page.keys[0]);
+                                  if (url) {
+                                    window.open(url, '_blank', 'noopener,noreferrer');
+                                  }
                                 }}
                                 sx={{ ml: 1 }}
                               >

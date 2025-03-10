@@ -288,28 +288,27 @@ export const gscService = {
       limit: limit.toString()
     });
 
-    console.log('Fetching top pages with params:', {
-      siteUrl,
-      startDate,
-      endDate,
-      limit
-    });
-
     try {
-      const response = await api.get<TopPagesResponse>(`/gsc/top-pages?${params}`);
+      const response = await api.get<any>(`/gsc/top-pages?${params}`);
       
-      // Validate response data
-      if (!response.data?.pages) {
-        console.error('Invalid response format:', response.data);
-        throw new Error('Invalid response format from API');
-      }
+      // Transform the response data to match our TopPage interface
+      const transformedPages = response.data.rows?.map((row: any) => ({
+        url: row.keys[0], // Extract URL from keys array
+        clicks: row.clicks,
+        impressions: row.impressions,
+        ctr: row.ctr,
+        position: row.position,
+        deltaClicks: row.deltaClicks,
+        deltaImpressions: row.deltaImpressions,
+        deltaCtr: row.deltaCtr,
+        deltaPosition: row.deltaPosition
+      })) || [];
 
-      // Log first few URLs for debugging
-      console.log('First 3 URLs received:', 
-        response.data.pages.slice(0, 3).map(p => p.url)
-      );
-
-      return response.data;
+      return {
+        pages: transformedPages,
+        limit: response.data.limit || limit,
+        creditsRemaining: response.data.creditsRemaining || 0
+      };
     } catch (error) {
       console.error('Error fetching top pages:', error);
       throw error;
