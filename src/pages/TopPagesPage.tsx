@@ -299,8 +299,13 @@ const TopPagesPage: React.FC = () => {
                         <Tooltip title="Open in new tab">
                           <IconButton 
                             size="small" 
-                            href={selectedProperty ? `${selectedProperty.siteUrl}${page.url}` : '#'} 
+                            href={selectedProperty?.siteUrl && page.url ? 
+                              // Handle both absolute and relative URLs
+                              page.url.startsWith('http') ? page.url : `${selectedProperty.siteUrl}${page.url}`
+                              : '#'
+                            } 
                             target="_blank"
+                            rel="noopener noreferrer"
                             sx={{ ml: 1 }}
                           >
                             <ExternalLinkIcon fontSize="small" />
