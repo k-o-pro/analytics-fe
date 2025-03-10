@@ -296,60 +296,89 @@ const TopPagesPage: React.FC = () => {
                         <Typography variant="body2" noWrap sx={{ maxWidth: 250 }}>
                           {page.url}
                         </Typography>
-                        {(() => {
-                          // Construct the URL outside of the component props
-                          let finalUrl = '#';
-                          
-                          if (selectedProperty?.siteUrl && page.url) {
-                            try {
-                              // If page.url is already a full URL, use it as is
-                              if (page.url.startsWith('http')) {
-                                finalUrl = page.url;
-                              } else {
-                                // Normalize the base URL
-                                let baseUrl = selectedProperty.siteUrl;
-                                if (!baseUrl.endsWith('/')) {
-                                  baseUrl = baseUrl + '/';
-                                }
-
-                                // Normalize the page path
-                                let pagePath = page.url;
-                                if (pagePath.startsWith('/')) {
-                                  pagePath = pagePath.slice(1);
-                                }
-
-                                // Combine base URL and page path
-                                finalUrl = `${baseUrl}${pagePath}`;
-                              }
+                        <span style={{ marginLeft: '10px' }}>
+                          {(() => {
+                            // Function to construct full URL from property and page URL
+                            const constructFullUrl = (propertyUrl: string, pageUrl: string): string => {
+                              // Debug log inputs
+                              console.log('constructFullUrl inputs:', { propertyUrl, pageUrl });
                               
-                              // Debug log final URL
-                              console.log('Page URL:', page.url, 'Final URL:', finalUrl);
-                            } catch (err) {
-                              console.error('Error constructing URL:', err);
-                            }
-                          }
-                          
-                          return (
-                            <Tooltip title={`Open ${finalUrl} in new tab`}>
-                              <IconButton 
+                              // Handle empty inputs
+                              if (!propertyUrl || !pageUrl) return '#';
+                              
+                              try {
+                                // Case 1: page URL is already absolute
+                                if (pageUrl.match(/^https?:\/\//i)) {
+                                  return pageUrl;
+                                }
+                                
+                                // Parse the property URL to get domain
+                                let baseUrl = propertyUrl;
+                                try {
+                                  const urlObj = new URL(propertyUrl);
+                                  baseUrl = `${urlObj.protocol}//${urlObj.host}`;
+                                } catch (e) {
+                                  console.error('Invalid property URL format:', propertyUrl);
+                                }
+                                
+                                // Ensure base URL ends with slash
+                                if (!baseUrl.endsWith('/')) {
+                                  baseUrl += '/';
+                                }
+                                
+                                // Normalize page path
+                                let pagePath = pageUrl;
+                                if (pagePath.startsWith('/')) {
+                                  pagePath = pagePath.substring(1);
+                                }
+                                
+                                // Construct final URL
+                                const finalUrl = baseUrl + pagePath;
+                                console.log('Constructed URL:', finalUrl);
+                                return finalUrl;
+                                
+                              } catch (err) {
+                                console.error('Error constructing URL:', err);
+                                return '#';
+                              }
+                            };
+                            
+                            // Construct the URL
+                            const fullUrl = constructFullUrl(
+                              selectedProperty?.siteUrl || '',
+                              page.url
+                            );
+                            
+                            // Render button with constructed URL
+                            return (
+                              <Button
                                 size="small"
-                                href={finalUrl}
+                                variant="text"
+                                color="primary"
+                                component="a"
+                                href={fullUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                sx={{ ml: 1 }}
+                                startIcon={<ExternalLinkIcon fontSize="small" />}
                                 onClick={(e) => {
-                                  // Add a click handler to ensure URL is used correctly
-                                  if (finalUrl === '#') {
+                                  if (fullUrl === '#') {
                                     e.preventDefault();
-                                    console.error('Invalid URL construction');
+                                    console.error('Invalid URL');
+                                  } else {
+                                    // Force window.open for more reliable external navigation
+                                    e.preventDefault();
+                                    window.open(fullUrl, '_blank', 'noopener,noreferrer');
                                   }
+                                  
+                                  // Log the URL being opened
+                                  console.log('Opening URL:', fullUrl);
                                 }}
                               >
-                                <ExternalLinkIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          );
-                        })()}
+                                Visit
+                              </Button>
+                            );
+                          })()}
+                        </span>
                       </Box>
                     </TableCell>
                     
