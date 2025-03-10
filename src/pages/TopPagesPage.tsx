@@ -296,24 +296,16 @@ const TopPagesPage: React.FC = () => {
                         <Typography variant="body2" noWrap sx={{ maxWidth: 250 }}>
                           {page.url}
                         </Typography>
-                        <Tooltip title="Open in new tab">
-                          <IconButton 
-                            size="small" 
-                            href={(() => {
-                              if (!selectedProperty?.siteUrl || !page.url) return '#';
-                              
-                              // Debug log
-                              console.log('URL Construction:', {
-                                siteUrl: selectedProperty.siteUrl,
-                                pageUrl: page.url
-                              });
-
-                              try {
-                                // If page.url is already a full URL, use it as is
-                                if (page.url.startsWith('http')) {
-                                  return page.url;
-                                }
-
+                        {(() => {
+                          // Construct the URL outside of the component props
+                          let finalUrl = '#';
+                          
+                          if (selectedProperty?.siteUrl && page.url) {
+                            try {
+                              // If page.url is already a full URL, use it as is
+                              if (page.url.startsWith('http')) {
+                                finalUrl = page.url;
+                              } else {
                                 // Normalize the base URL
                                 let baseUrl = selectedProperty.siteUrl;
                                 if (!baseUrl.endsWith('/')) {
@@ -327,23 +319,37 @@ const TopPagesPage: React.FC = () => {
                                 }
 
                                 // Combine base URL and page path
-                                const fullUrl = `${baseUrl}${pagePath}`;
-                                
-                                // Verify we have a valid URL before returning
-                                console.log('Constructed URL:', fullUrl);
-                                return fullUrl;
-                              } catch (err) {
-                                console.error('Error constructing URL:', err);
-                                return '#';
+                                finalUrl = `${baseUrl}${pagePath}`;
                               }
-                            })()}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{ ml: 1 }}
-                          >
-                            <ExternalLinkIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                              
+                              // Debug log final URL
+                              console.log('Page URL:', page.url, 'Final URL:', finalUrl);
+                            } catch (err) {
+                              console.error('Error constructing URL:', err);
+                            }
+                          }
+                          
+                          return (
+                            <Tooltip title={`Open ${finalUrl} in new tab`}>
+                              <IconButton 
+                                size="small"
+                                href={finalUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{ ml: 1 }}
+                                onClick={(e) => {
+                                  // Add a click handler to ensure URL is used correctly
+                                  if (finalUrl === '#') {
+                                    e.preventDefault();
+                                    console.error('Invalid URL construction');
+                                  }
+                                }}
+                              >
+                                <ExternalLinkIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          );
+                        })()}
                       </Box>
                     </TableCell>
                     
