@@ -324,15 +324,14 @@ const TopPagesPage: React.FC = () => {
                                   whiteSpace: 'nowrap'
                                 }}
                               >
-                                {page.url || (page.keys && page.keys[0]) || 'N/A'}
+                                {page.url}
                               </Typography>
                               <IconButton
                                 size="small"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  const url = page.url || (page.keys && page.keys[0]);
-                                  if (url) {
-                                    window.open(url, '_blank', 'noopener,noreferrer');
+                                  if (page.url) {
+                                    window.open(page.url, '_blank', 'noopener,noreferrer');
                                   }
                                 }}
                                 sx={{ ml: 1 }}

@@ -42,6 +42,7 @@ export type TopPagesRequest = {
 
 export type TopPage = {
   url: string;
+  keys?: string[];  // Add keys as optional field
   clicks: number;
   impressions: number;
   ctr: number;
@@ -293,7 +294,8 @@ export const gscService = {
       
       // Transform the response data to match our TopPage interface
       const transformedPages = response.data.rows?.map((row: any) => ({
-        url: row.keys[0], // Extract URL from keys array
+        url: row.keys[0], // Use first key as URL
+        keys: row.keys,   // Keep original keys array
         clicks: row.clicks,
         impressions: row.impressions,
         ctr: row.ctr,
