@@ -57,14 +57,18 @@ const TopPagesPage: React.FC = () => {
       setError(null);
       setShowPremiumAlert(false);
 
+      console.log('Fetching data for property:', selectedProperty.siteUrl);
       const response = await gscService.getTopPages(
         selectedProperty.siteUrl,
         selectedRange.startDate,
         selectedRange.endDate,
-        (page + 1) * rowsPerPage // requested limit
+        (page + 1) * rowsPerPage
       );
 
-      console.log('Received top pages data:', response.pages); // Add debug logging
+      console.log('Raw pages data:', response.pages);
+      if (!response.pages?.length) {
+        console.warn('No pages data received');
+      }
       setTopPages(response.pages);
       setTotalPages(response.pages.length);
       
@@ -293,36 +297,50 @@ const TopPagesPage: React.FC = () => {
                 topPages.map((page) => (
                   <TableRow key={page.url} hover>
                     <TableCell>
-                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        minWidth: '200px',
+                        maxWidth: '400px'
+                      }}>
                         {(() => {
-                          console.log('Page URL:', page.url); // Add debug logging
+                          if (!page?.url) {
+                            console.warn('Missing URL for page:', page);
+                            return null;
+                          }
+
+                          console.log('Rendering URL:', page.url);
+                          
                           return (
-                            <>
-                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <Typography 
-                                  variant="body2" 
-                                  component="a"
-                                  href={page.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  sx={{ 
-                                    maxWidth: '100%',
-                                    textDecoration: 'none',
-                                    color: 'primary.main',
-                                    wordBreak: 'break-all',
-                                    '&:hover': {
-                                      textDecoration: 'underline'
-                                    }
-                                  }}
-                                >
-                                  {page.url}
-                                  <ExternalLinkIcon 
-                                    fontSize="small" 
-                                    sx={{ ml: 0.5, fontSize: '0.8rem', verticalAlign: 'middle' }} 
-                                  />
-                                </Typography>
-                              </Box>
-                            </>
+                            <Box sx={{ 
+                              display: 'flex', 
+                              alignItems: 'center',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }}>
+                              <Typography 
+                                variant="body2" 
+                                component="div"
+                                sx={{ 
+                                  flex: 1,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {page.url}
+                              </Typography>
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  window.open(page.url, '_blank', 'noopener,noreferrer');
+                                }}
+                                sx={{ ml: 1 }}
+                              >
+                                <ExternalLinkIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
                           );
                         })()}
                       </Box>

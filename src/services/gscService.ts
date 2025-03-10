@@ -295,9 +295,25 @@ export const gscService = {
       limit
     });
 
-    const response = await api.get<TopPagesResponse>(`/gsc/top-pages?${params}`);
-    console.log('Top pages response:', response.data); // Add debug logging
-    return response.data;
+    try {
+      const response = await api.get<TopPagesResponse>(`/gsc/top-pages?${params}`);
+      
+      // Validate response data
+      if (!response.data?.pages) {
+        console.error('Invalid response format:', response.data);
+        throw new Error('Invalid response format from API');
+      }
+
+      // Log first few URLs for debugging
+      console.log('First 3 URLs received:', 
+        response.data.pages.slice(0, 3).map(p => p.url)
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching top pages:', error);
+      throw error;
+    }
   },
 
   // Helper function to generate date ranges
