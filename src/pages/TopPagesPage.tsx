@@ -57,18 +57,13 @@ const TopPagesPage: React.FC = () => {
       setError(null);
       setShowPremiumAlert(false);
 
-      console.log('Fetching data for property:', selectedProperty.siteUrl);
       const response = await gscService.getTopPages(
         selectedProperty.siteUrl,
         selectedRange.startDate,
         selectedRange.endDate,
-        (page + 1) * rowsPerPage
+        (page + 1) * rowsPerPage // requested limit
       );
 
-      console.log('Raw pages data:', response.pages);
-      if (!response.pages?.length) {
-        console.warn('No pages data received');
-      }
       setTopPages(response.pages);
       setTotalPages(response.pages.length);
       
@@ -297,48 +292,105 @@ const TopPagesPage: React.FC = () => {
                 topPages.map((page) => (
                   <TableRow key={page.url} hover>
                     <TableCell>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        flexDirection: 'column',
-                        minWidth: '200px',
-                        maxWidth: '400px'
-                      }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                         {(() => {
-                          // Add debug logging
-                          console.log('Page data:', page);
-
+                          // Function to construct full URL from property and page URL
+                          const constructFullUrl = (propertyUrl: string, pageUrl: string): string => {
+                            // Debug log inputs
+                            console.log('constructFullUrl inputs:', { propertyUrl, pageUrl });
+                            
+                            // Handle empty inputs
+                            if (!propertyUrl || !pageUrl) return '#';
+                            
+                            try {
+                              // Case 1: page URL is already absolute
+                              if (pageUrl.match(/^https?:\/\//i)) {
+                                return pageUrl;
+                              }
+                              
+                              // Parse the property URL to get domain
+                              let baseUrl = propertyUrl;
+                              try {
+                                const urlObj = new URL(propertyUrl);
+                                baseUrl = `${urlObj.protocol}//${urlObj.host}`;
+                              } catch (e) {
+                                console.error('Invalid property URL format:', propertyUrl);
+                              }
+                              
+                              // Ensure base URL ends with slash
+                              if (!baseUrl.endsWith('/')) {
+                                baseUrl += '/';
+                              }
+                              
+                              // Normalize page path
+                              let pagePath = pageUrl;
+                              if (pagePath.startsWith('/')) {
+                                pagePath = pagePath.substring(1);
+                              }
+                              
+                              // Construct final URL
+                              const finalUrl = baseUrl + pagePath;
+                              console.log('Constructed URL:', finalUrl);
+                              return finalUrl;
+                              
+                            } catch (err) {
+                              console.error('Error constructing URL:', err);
+                              return '#';
+                            }
+                          };
+                          
+                          // Construct the URL
+                          const fullUrl = constructFullUrl(
+                            selectedProperty?.siteUrl || '',
+                            page.url
+                          );
+                          
                           return (
-                            <Box sx={{ 
-                              display: 'flex', 
-                              alignItems: 'center',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}>
+                            <>
+                              {/* Display URL as text */}
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <Typography 
+                                  variant="body2" 
+                                  component="a"
+                                  href={fullUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  sx={{ 
+                                    maxWidth: 250, 
+                                    textDecoration: 'none',
+                                    color: 'primary.main',
+                                    '&:hover': {
+                                      textDecoration: 'underline'
+                                    }
+                                  }}
+                                  onClick={(e) => {
+                                    if (fullUrl === '#') {
+                                      e.preventDefault();
+                                      console.error('Invalid URL');
+                                    } else {
+                                      // Force window.open for more reliable navigation
+                                      e.preventDefault();
+                                      window.open(fullUrl, '_blank', 'noopener,noreferrer');
+                                    }
+                                  }}
+                                >
+                                  {fullUrl !== '#' ? fullUrl : page.url}
+                                  <ExternalLinkIcon 
+                                    fontSize="small" 
+                                    sx={{ ml: 0.5, fontSize: '0.8rem', verticalAlign: 'middle' }} 
+                                  />
+                                </Typography>
+                              </Box>
+                              
+                              {/* Display original path from GSC for context */}
                               <Typography 
-                                variant="body2" 
-                                component="div"
-                                sx={{ 
-                                  flex: 1,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap'
-                                }}
+                                variant="caption" 
+                                color="text.secondary"
+                                sx={{ mt: 0.5 }}
                               >
-                                {page.url}
+                                Path: {page.url}
                               </Typography>
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  if (page.url) {
-                                    window.open(page.url, '_blank', 'noopener,noreferrer');
-                                  }
-                                }}
-                                sx={{ ml: 1 }}
-                              >
-                                <ExternalLinkIcon fontSize="small" />
-                              </IconButton>
-                            </Box>
+                            </>
                           );
                         })()}
                       </Box>

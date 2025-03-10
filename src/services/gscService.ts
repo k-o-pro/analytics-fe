@@ -42,7 +42,6 @@ export type TopPagesRequest = {
 
 export type TopPage = {
   url: string;
-  keys?: string[];  // Add keys as optional field
   clicks: number;
   impressions: number;
   ctr: number;
@@ -289,32 +288,8 @@ export const gscService = {
       limit: limit.toString()
     });
 
-    try {
-      const response = await api.get<any>(`/gsc/top-pages?${params}`);
-      
-      // Transform the response data to match our TopPage interface
-      const transformedPages = response.data.rows?.map((row: any) => ({
-        url: row.keys[0], // Use first key as URL
-        keys: row.keys,   // Keep original keys array
-        clicks: row.clicks,
-        impressions: row.impressions,
-        ctr: row.ctr,
-        position: row.position,
-        deltaClicks: row.deltaClicks,
-        deltaImpressions: row.deltaImpressions,
-        deltaCtr: row.deltaCtr,
-        deltaPosition: row.deltaPosition
-      })) || [];
-
-      return {
-        pages: transformedPages,
-        limit: response.data.limit || limit,
-        creditsRemaining: response.data.creditsRemaining || 0
-      };
-    } catch (error) {
-      console.error('Error fetching top pages:', error);
-      throw error;
-    }
+    const response = await api.get<TopPagesResponse>(`/gsc/top-pages?${params}`);
+    return response.data;
   },
 
   // Helper function to generate date ranges
