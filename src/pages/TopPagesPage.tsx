@@ -368,7 +368,6 @@ const TopPagesPage: React.FC = () => {
                                       e.preventDefault();
                                       console.error('Invalid URL');
                                     } else {
-                                      // Force window.open for more reliable navigation
                                       e.preventDefault();
                                       window.open(fullUrl, '_blank', 'noopener,noreferrer');
                                     }
