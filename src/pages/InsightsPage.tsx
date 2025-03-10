@@ -121,7 +121,7 @@ const InsightsPage: React.FC = () => {
         period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
         data: {
           // Include basic data to help OpenAI generate insights
-          property: selectedProperty.name || selectedProperty.siteUrl,
+          property: selectedProperty.siteUrl, // GSCProperty only has siteUrl, not name
           targetPageUrl: targetPageUrl || null,
           dateRange: {
             start: selectedRange.startDate,
