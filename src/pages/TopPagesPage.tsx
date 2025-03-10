@@ -292,93 +292,107 @@ const TopPagesPage: React.FC = () => {
                 topPages.map((page) => (
                   <TableRow key={page.url} hover>
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography variant="body2" noWrap sx={{ maxWidth: 250 }}>
-                          {page.url}
-                        </Typography>
-                        <span style={{ marginLeft: '10px' }}>
-                          {(() => {
-                            // Function to construct full URL from property and page URL
-                            const constructFullUrl = (propertyUrl: string, pageUrl: string): string => {
-                              // Debug log inputs
-                              console.log('constructFullUrl inputs:', { propertyUrl, pageUrl });
-                              
-                              // Handle empty inputs
-                              if (!propertyUrl || !pageUrl) return '#';
-                              
-                              try {
-                                // Case 1: page URL is already absolute
-                                if (pageUrl.match(/^https?:\/\//i)) {
-                                  return pageUrl;
-                                }
-                                
-                                // Parse the property URL to get domain
-                                let baseUrl = propertyUrl;
-                                try {
-                                  const urlObj = new URL(propertyUrl);
-                                  baseUrl = `${urlObj.protocol}//${urlObj.host}`;
-                                } catch (e) {
-                                  console.error('Invalid property URL format:', propertyUrl);
-                                }
-                                
-                                // Ensure base URL ends with slash
-                                if (!baseUrl.endsWith('/')) {
-                                  baseUrl += '/';
-                                }
-                                
-                                // Normalize page path
-                                let pagePath = pageUrl;
-                                if (pagePath.startsWith('/')) {
-                                  pagePath = pagePath.substring(1);
-                                }
-                                
-                                // Construct final URL
-                                const finalUrl = baseUrl + pagePath;
-                                console.log('Constructed URL:', finalUrl);
-                                return finalUrl;
-                                
-                              } catch (err) {
-                                console.error('Error constructing URL:', err);
-                                return '#';
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        {(() => {
+                          // Function to construct full URL from property and page URL
+                          const constructFullUrl = (propertyUrl: string, pageUrl: string): string => {
+                            // Debug log inputs
+                            console.log('constructFullUrl inputs:', { propertyUrl, pageUrl });
+                            
+                            // Handle empty inputs
+                            if (!propertyUrl || !pageUrl) return '#';
+                            
+                            try {
+                              // Case 1: page URL is already absolute
+                              if (pageUrl.match(/^https?:\/\//i)) {
+                                return pageUrl;
                               }
-                            };
-                            
-                            // Construct the URL
-                            const fullUrl = constructFullUrl(
-                              selectedProperty?.siteUrl || '',
-                              page.url
-                            );
-                            
-                            // Render button with constructed URL
-                            return (
-                              <Button
-                                size="small"
-                                variant="text"
-                                color="primary"
-                                component="a"
-                                href={fullUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                startIcon={<ExternalLinkIcon fontSize="small" />}
-                                onClick={(e) => {
-                                  if (fullUrl === '#') {
-                                    e.preventDefault();
-                                    console.error('Invalid URL');
-                                  } else {
-                                    // Force window.open for more reliable external navigation
-                                    e.preventDefault();
-                                    window.open(fullUrl, '_blank', 'noopener,noreferrer');
-                                  }
-                                  
-                                  // Log the URL being opened
-                                  console.log('Opening URL:', fullUrl);
-                                }}
+                              
+                              // Parse the property URL to get domain
+                              let baseUrl = propertyUrl;
+                              try {
+                                const urlObj = new URL(propertyUrl);
+                                baseUrl = `${urlObj.protocol}//${urlObj.host}`;
+                              } catch (e) {
+                                console.error('Invalid property URL format:', propertyUrl);
+                              }
+                              
+                              // Ensure base URL ends with slash
+                              if (!baseUrl.endsWith('/')) {
+                                baseUrl += '/';
+                              }
+                              
+                              // Normalize page path
+                              let pagePath = pageUrl;
+                              if (pagePath.startsWith('/')) {
+                                pagePath = pagePath.substring(1);
+                              }
+                              
+                              // Construct final URL
+                              const finalUrl = baseUrl + pagePath;
+                              console.log('Constructed URL:', finalUrl);
+                              return finalUrl;
+                              
+                            } catch (err) {
+                              console.error('Error constructing URL:', err);
+                              return '#';
+                            }
+                          };
+                          
+                          // Construct the URL
+                          const fullUrl = constructFullUrl(
+                            selectedProperty?.siteUrl || '',
+                            page.url
+                          );
+                          
+                          return (
+                            <>
+                              {/* Display URL as text */}
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <Typography 
+                                  variant="body2" 
+                                  component="a"
+                                  href={fullUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  sx={{ 
+                                    maxWidth: 250, 
+                                    textDecoration: 'none',
+                                    color: 'primary.main',
+                                    '&:hover': {
+                                      textDecoration: 'underline'
+                                    }
+                                  }}
+                                  onClick={(e) => {
+                                    if (fullUrl === '#') {
+                                      e.preventDefault();
+                                      console.error('Invalid URL');
+                                    } else {
+                                      // Force window.open for more reliable navigation
+                                      e.preventDefault();
+                                      window.open(fullUrl, '_blank', 'noopener,noreferrer');
+                                    }
+                                  }}
+                                >
+                                  {fullUrl !== '#' ? fullUrl : page.url}
+                                  <ExternalLinkIcon 
+                                    fontSize="small" 
+                                    sx={{ ml: 0.5, fontSize: '0.8rem', verticalAlign: 'middle' }} 
+                                  />
+                                </Typography>
+                              </Box>
+                              
+                              {/* Display original path from GSC for context */}
+                              <Typography 
+                                variant="caption" 
+                                color="text.secondary"
+                                sx={{ mt: 0.5 }}
                               >
-                                Visit
-                              </Button>
-                            );
-                          })()}
-                        </span>
+                                Path: {page.url}
+                              </Typography>
+                            </>
+                          );
+                        })()}
                       </Box>
                     </TableCell>
                     
