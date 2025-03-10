@@ -299,7 +299,7 @@ const TopPagesPage: React.FC = () => {
                         <Tooltip title="Open in new tab">
                           <IconButton 
                             size="small" 
-                            href={`https://example.com${page.url}`} 
+                            href={selectedProperty ? `${selectedProperty.siteUrl}${page.url}` : '#'} 
                             target="_blank"
                             sx={{ ml: 1 }}
                           >
