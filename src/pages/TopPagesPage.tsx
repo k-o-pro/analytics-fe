@@ -296,11 +296,7 @@ const TopPagesPage: React.FC = () => {
                         {(() => {
                           // Function to construct full URL from property and page URL
                           const constructFullUrl = (propertyUrl: string, pageUrl: string): string => {
-                            // Debug log inputs
-                            console.log('constructFullUrl inputs:', { propertyUrl, pageUrl });
-                            
-                            // Handle empty inputs
-                            if (!propertyUrl || !pageUrl) return '#';
+                            if (!propertyUrl || !pageUrl) return pageUrl || '#';
                             
                             try {
                               // Case 1: page URL is already absolute
@@ -315,6 +311,7 @@ const TopPagesPage: React.FC = () => {
                                 baseUrl = `${urlObj.protocol}//${urlObj.host}`;
                               } catch (e) {
                                 console.error('Invalid property URL format:', propertyUrl);
+                                return pageUrl; // Fall back to page URL if property URL is invalid
                               }
                               
                               // Ensure base URL ends with slash
@@ -329,17 +326,13 @@ const TopPagesPage: React.FC = () => {
                               }
                               
                               // Construct final URL
-                              const finalUrl = baseUrl + pagePath;
-                              console.log('Constructed URL:', finalUrl);
-                              return finalUrl;
-                              
+                              return baseUrl + pagePath;
                             } catch (err) {
                               console.error('Error constructing URL:', err);
-                              return '#';
+                              return pageUrl; // Fall back to page URL if construction fails
                             }
                           };
-                          
-                          // Construct the URL
+
                           const fullUrl = constructFullUrl(
                             selectedProperty?.siteUrl || '',
                             page.url
@@ -347,7 +340,6 @@ const TopPagesPage: React.FC = () => {
                           
                           return (
                             <>
-                              {/* Display URL as text */}
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <Typography 
                                   variant="body2" 
@@ -356,7 +348,7 @@ const TopPagesPage: React.FC = () => {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   sx={{ 
-                                    maxWidth: 250, 
+                                    maxWidth: '100%',
                                     textDecoration: 'none',
                                     color: 'primary.main',
                                     '&:hover': {
@@ -364,31 +356,19 @@ const TopPagesPage: React.FC = () => {
                                     }
                                   }}
                                   onClick={(e) => {
-                                    if (fullUrl === '#') {
-                                      e.preventDefault();
-                                      console.error('Invalid URL');
-                                    } else {
-                                      e.preventDefault();
+                                    e.preventDefault();
+                                    if (fullUrl !== '#') {
                                       window.open(fullUrl, '_blank', 'noopener,noreferrer');
                                     }
                                   }}
                                 >
-                                  {fullUrl !== '#' ? fullUrl : page.url}
+                                  {page.url}
                                   <ExternalLinkIcon 
                                     fontSize="small" 
                                     sx={{ ml: 0.5, fontSize: '0.8rem', verticalAlign: 'middle' }} 
                                   />
                                 </Typography>
                               </Box>
-                              
-                              {/* Display original path from GSC for context */}
-                              <Typography 
-                                variant="caption" 
-                                color="text.secondary"
-                                sx={{ mt: 0.5 }}
-                              >
-                                Path: {page.url}
-                              </Typography>
                             </>
                           );
                         })()}
