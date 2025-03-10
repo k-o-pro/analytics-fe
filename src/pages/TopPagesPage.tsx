@@ -301,18 +301,35 @@ const TopPagesPage: React.FC = () => {
                             size="small" 
                             href={(() => {
                               if (!selectedProperty?.siteUrl || !page.url) return '#';
+                              
+                              // Debug log
+                              console.log('URL Construction:', {
+                                siteUrl: selectedProperty.siteUrl,
+                                pageUrl: page.url
+                              });
+
                               try {
-                                // If page.url is absolute, use it directly
-                                if (page.url.match(/^https?:\/\//)) {
+                                // If page.url is already a full URL, use it as is
+                                if (page.url.startsWith('http')) {
                                   return page.url;
                                 }
-                                // Otherwise, combine with the site URL
-                                const baseUrl = new URL(selectedProperty.siteUrl);
-                                // Remove trailing slash from base and leading slash from path
-                                const basePath = baseUrl.pathname.replace(/\/$/, '');
-                                const pagePath = page.url.replace(/^\//, '');
-                                return `${baseUrl.origin}${basePath}/${pagePath}`;
-                              } catch {
+
+                                // Normalize the base URL
+                                let baseUrl = selectedProperty.siteUrl;
+                                if (!baseUrl.endsWith('/')) {
+                                  baseUrl = baseUrl + '/';
+                                }
+
+                                // Normalize the page path
+                                let pagePath = page.url;
+                                if (pagePath.startsWith('/')) {
+                                  pagePath = pagePath.slice(1);
+                                }
+
+                                // Combine base URL and page path
+                                return `${baseUrl}${pagePath}`;
+                              } catch (err) {
+                                console.error('Error constructing URL:', err);
                                 return '#';
                               }
                             })()}
