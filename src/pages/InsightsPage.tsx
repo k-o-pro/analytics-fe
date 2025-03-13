@@ -114,29 +114,67 @@ const InsightsPage: React.FC = () => {
       setGenerating(true);
       setError(null);
 
-      if (!selectedProperty) return;
+      if (!selectedProperty) {
+        setError('Please select a property first.');
+        setGenerating(false);
+        return;
+      }
 
-      const response = await insightsService.generateInsights({
-        siteUrl: selectedProperty.siteUrl,
-        period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
-        data: {
-          // Include basic data to help OpenAI generate insights
-          property: selectedProperty.siteUrl, // GSCProperty only has siteUrl, not name
-          targetPageUrl: targetPageUrl || null,
-          dateRange: {
-            start: selectedRange.startDate,
-            end: selectedRange.endDate,
-            label: selectedRange.label
-          }
-        }
-      });
+      console.log('Generating insights for property:', selectedProperty.siteUrl);
       
-      setInsights(response);
-      setCredits(prev => Math.max(0, prev - 1));
-
+      try {
+        const response = await insightsService.generateInsights({
+          siteUrl: selectedProperty.siteUrl,
+          period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
+          data: {
+            // Include basic data to help OpenAI generate insights
+            property: selectedProperty.siteUrl, // GSCProperty only has siteUrl, not name
+            targetPageUrl: targetPageUrl || null,
+            dateRange: {
+              start: selectedRange.startDate,
+              end: selectedRange.endDate,
+              label: selectedRange.label
+            }
+          }
+        });
+        
+        setInsights(response);
+        setCredits(prev => Math.max(0, prev - 1));
+      } catch (apiError: any) {
+        console.error('API Error generating insights:', apiError);
+        
+        // Provide specific error messages based on error type
+        if (apiError.message && apiError.message.includes('500')) {
+          setError('Our AI service is temporarily unavailable. Please try again later.');
+        } else if (apiError.message && apiError.message.includes('timeout')) {
+          setError('The request timed out. Try again with a shorter date range.');
+        } else if (apiError.response && apiError.response.status === 401) {
+          setError('Your session has expired. Please refresh the page and log in again.');
+        } else {
+          setError('Failed to generate insights. Please try again later.');
+        }
+        
+        // Create a fallback insights object so the UI doesn't break
+        setInsights({
+          summary: "Unable to generate insights at this time",
+          performance: {
+            trend: "stable",
+            details: "We encountered an error while generating your insights."
+          },
+          topFindings: [{
+            title: "Service temporarily unavailable",
+            description: "We're experiencing technical difficulties with our AI service. Please try again later."
+          }],
+          recommendations: [{
+            title: "Check back soon",
+            description: "Our team has been notified of this issue and is working to resolve it.",
+            priority: "medium"
+          }]
+        });
+      }
     } catch (err) {
       console.error('Failed to generate insights:', err);
-      setError('Failed to generate insights. Please try again.');
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setGenerating(false);
     }

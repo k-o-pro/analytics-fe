@@ -64,8 +64,20 @@ const TopPagesPage: React.FC = () => {
         (page + 1) * rowsPerPage // requested limit
       );
 
-      setTopPages(response.pages);
-      setTotalPages(response.pages.length);
+      // Ensure all page records have a valid URL property
+      const processedPages = response.pages.map(pageData => {
+        // If URL is missing, use the keys property which often contains the page path
+        if (!pageData.url && pageData.keys && pageData.keys[0]) {
+          return {
+            ...pageData,
+            url: pageData.keys[0] // Use the first key as URL
+          };
+        }
+        return pageData;
+      });
+
+      setTopPages(processedPages);
+      setTotalPages(processedPages.length);
       
       if (page * rowsPerPage + rowsPerPage > 10 && response.creditsRemaining === 0) {
         setShowPremiumAlert(true);
@@ -299,10 +311,15 @@ const TopPagesPage: React.FC = () => {
                             // Debug log inputs
                             console.log('constructFullUrl inputs:', { propertyUrl, pageUrl });
                             
-                            // Handle empty inputs
-                            if (!propertyUrl || !pageUrl) {
-                              console.error('Empty URL inputs:', { propertyUrl, pageUrl });
-                              return pageUrl || '#'; // Return page URL if available, otherwise fallback
+                            // Handle empty inputs - critical fix for undefined pageUrl
+                            if (!pageUrl) {
+                              console.error('Empty page URL for property:', propertyUrl);
+                              return propertyUrl || '#'; // Return property URL as fallback
+                            }
+                            
+                            if (!propertyUrl) {
+                              console.error('Empty property URL for page:', pageUrl);
+                              return pageUrl; // Return just the page URL if property is missing
                             }
                             
                             try {
@@ -341,14 +358,17 @@ const TopPagesPage: React.FC = () => {
                               
                             } catch (err) {
                               console.error('Error constructing URL:', err);
-                              return pageUrl || '#'; // Return page URL as fallback
+                              return pageUrl || propertyUrl || '#'; // Multiple fallback options
                             }
                           };
+                          
+                          // Ensure page URL exists before trying to construct full URL
+                          const pageUrl = page.url || '';
                           
                           // Construct the URL
                           const fullUrl = constructFullUrl(
                             selectedProperty?.siteUrl || '',
-                            page.url
+                            pageUrl
                           );
                           
                           return (
@@ -358,7 +378,7 @@ const TopPagesPage: React.FC = () => {
                                 <Typography 
                                   variant="body2" 
                                   component="a"
-                                  href={fullUrl}
+                                  href={fullUrl !== '#' ? fullUrl : undefined}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   sx={{ 
@@ -380,23 +400,27 @@ const TopPagesPage: React.FC = () => {
                                     }
                                   }}
                                 >
-                                  {/* Always show at least the page URL path */}
-                                  {page.url}
-                                  <ExternalLinkIcon 
-                                    fontSize="small" 
-                                    sx={{ ml: 0.5, fontSize: '0.8rem', verticalAlign: 'middle' }} 
-                                  />
+                                  {/* Show the URL path or some fallback text */}
+                                  {pageUrl || 'No URL available'}
+                                  {fullUrl !== '#' && (
+                                    <ExternalLinkIcon 
+                                      fontSize="small" 
+                                      sx={{ ml: 0.5, fontSize: '0.8rem', verticalAlign: 'middle' }} 
+                                    />
+                                  )}
                                 </Typography>
                               </Box>
                               
-                              {/* Display original path from GSC for context */}
-                              <Typography 
-                                variant="caption" 
-                                color="text.secondary"
-                                sx={{ mt: 0.5 }}
-                              >
-                                Path: {page.url}
-                              </Typography>
+                              {/* Only display path if we have a valid URL */}
+                              {pageUrl && (
+                                <Typography 
+                                  variant="caption" 
+                                  color="text.secondary"
+                                  sx={{ mt: 0.5 }}
+                                >
+                                  Path: {pageUrl}
+                                </Typography>
+                              )}
                             </>
                           );
                         })()}

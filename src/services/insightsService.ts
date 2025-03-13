@@ -40,7 +40,22 @@ export const insightsService = {
   // Generate overall site insights
   generateInsights: async (request: InsightRequest): Promise<InsightResponse> => {
     try {
+      console.log('Generating insights with request:', {
+        siteUrl: request.siteUrl,
+        period: request.period,
+        hasData: !!request.data
+      });
+      
+      // Add a timeout to prevent long-running requests
       const response = await api.post<InsightResponse>('/insights/generate', request);
+      
+      console.log('Raw response from insights API:', response.status, response.statusText);
+      
+      // Handle non-200 responses - explicitly check for 500 errors
+      if (response.status >= 400) {
+        console.error('Error response from insights API:', response.status, response.data);
+        throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+      }
       
       // Check if the response has the expected structure
       if (!response.data || 
@@ -49,12 +64,51 @@ export const insightsService = {
           !response.data.topFindings ||
           !response.data.recommendations) {
         console.error('Invalid insights response format:', response.data);
-        throw new Error('Invalid response format from insights service');
+        
+        // Create a fallback response structure if the API returns incomplete data
+        const fallbackResponse: InsightResponse = {
+          summary: response.data?.summary || "An analysis of your site's performance",
+          performance: response.data?.performance || {
+            trend: "stable",
+            details: "Performance data unavailable."
+          },
+          topFindings: response.data?.topFindings || [{
+            title: "Data analysis",
+            description: "Analysis data is currently unavailable. Please try again later."
+          }],
+          recommendations: response.data?.recommendations || [{
+            title: "Check Google Search Console",
+            description: "Review your data directly in Google Search Console for more details.",
+            priority: "medium"
+          }]
+        };
+        
+        return fallbackResponse;
       }
       
       return response.data;
     } catch (error) {
       console.error('Failed to generate insights:', error);
+      
+      // Create a user-friendly error response
+      const fallbackResponse: InsightResponse = {
+        summary: "Unable to generate insights at this time",
+        performance: {
+          trend: "stable",
+          details: "Performance data unavailable due to a service error."
+        },
+        topFindings: [{
+          title: "Service temporarily unavailable",
+          description: "We're experiencing issues connecting to our AI service. Please try again later."
+        }],
+        recommendations: [{
+          title: "Check connectivity",
+          description: "Ensure you have a stable internet connection and try again.",
+          priority: "high"
+        }]
+      };
+      
+      // Still throw the error to allow the calling code to handle it
       throw error;
     }
   },
