@@ -300,7 +300,10 @@ const TopPagesPage: React.FC = () => {
                             console.log('constructFullUrl inputs:', { propertyUrl, pageUrl });
                             
                             // Handle empty inputs
-                            if (!propertyUrl || !pageUrl) return '#';
+                            if (!propertyUrl || !pageUrl) {
+                              console.error('Empty URL inputs:', { propertyUrl, pageUrl });
+                              return pageUrl || '#'; // Return page URL if available, otherwise fallback
+                            }
                             
                             try {
                               // Case 1: page URL is already absolute
@@ -313,8 +316,11 @@ const TopPagesPage: React.FC = () => {
                               try {
                                 const urlObj = new URL(propertyUrl);
                                 baseUrl = `${urlObj.protocol}//${urlObj.host}`;
+                                console.log('Parsed baseUrl:', baseUrl);
                               } catch (e) {
                                 console.error('Invalid property URL format:', propertyUrl);
+                                // If we can't parse the property URL, just return the page URL
+                                return pageUrl;
                               }
                               
                               // Ensure base URL ends with slash
@@ -335,7 +341,7 @@ const TopPagesPage: React.FC = () => {
                               
                             } catch (err) {
                               console.error('Error constructing URL:', err);
-                              return '#';
+                              return pageUrl || '#'; // Return page URL as fallback
                             }
                           };
                           
@@ -374,7 +380,8 @@ const TopPagesPage: React.FC = () => {
                                     }
                                   }}
                                 >
-                                  {fullUrl !== '#' ? fullUrl : page.url}
+                                  {/* Always show at least the page URL path */}
+                                  {page.url}
                                   <ExternalLinkIcon 
                                     fontSize="small" 
                                     sx={{ ml: 0.5, fontSize: '0.8rem', verticalAlign: 'middle' }} 
