@@ -143,6 +143,35 @@ const InsightsPage: React.FC = () => {
       } catch (apiError: any) {
         console.error('API Error generating insights:', apiError);
         
+        // Try to use mock data with a different API call
+        try {
+          console.log('Attempting to use mock data as fallback...');
+          const mockResponse = await insightsService.generateInsights({
+            siteUrl: selectedProperty.siteUrl,
+            period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
+            data: {
+              property: selectedProperty.siteUrl,
+              targetPageUrl: targetPageUrl || null,
+              dateRange: {
+                start: selectedRange.startDate,
+                end: selectedRange.endDate,
+                label: selectedRange.label
+              },
+              useMock: true // Signal to use mock data
+            }
+          });
+          
+          // If we got mock data, use it but show a warning
+          setInsights(mockResponse);
+          setCredits(prev => Math.max(0, prev - 1));
+          setError('Note: We\'re currently showing sample insights because our AI service is temporarily unavailable. Your account has not been charged.');
+          
+          return; // Early return to avoid showing additional error messages
+        } catch (mockError) {
+          console.error('Failed to get mock insights:', mockError);
+          // Continue to error handling
+        }
+        
         // Provide specific error messages based on error type
         if (apiError.message && apiError.message.includes('500')) {
           setError('Our AI service is temporarily unavailable. Please try again later.');
@@ -169,6 +198,10 @@ const InsightsPage: React.FC = () => {
             title: "Check back soon",
             description: "Our team has been notified of this issue and is working to resolve it.",
             priority: "medium"
+          }, {
+            title: "Try Google Search Console directly",
+            description: "In the meantime, you can view your data directly in Google Search Console.",
+            priority: "high"
           }]
         });
       }

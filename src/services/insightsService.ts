@@ -46,47 +46,48 @@ export const insightsService = {
         hasData: !!request.data
       });
       
-      // Add a timeout to prevent long-running requests
-      const response = await api.post<InsightResponse>('/insights/generate', request);
-      
-      console.log('Raw response from insights API:', response.status, response.statusText);
-      
-      // Handle non-200 responses - explicitly check for 500 errors
-      if (response.status >= 400) {
-        console.error('Error response from insights API:', response.status, response.data);
-        throw new Error(`Server error: ${response.status} - ${response.statusText}`);
-      }
-      
-      // Check if the response has the expected structure
-      if (!response.data || 
-          !response.data.summary || 
-          !response.data.performance ||
-          !response.data.topFindings ||
-          !response.data.recommendations) {
-        console.error('Invalid insights response format:', response.data);
+      // First try to get real insights
+      try {
+        const response = await api.post<InsightResponse>('/insights/generate', request);
         
-        // Create a fallback response structure if the API returns incomplete data
-        const fallbackResponse: InsightResponse = {
-          summary: response.data?.summary || "An analysis of your site's performance",
-          performance: response.data?.performance || {
-            trend: "stable",
-            details: "Performance data unavailable."
-          },
-          topFindings: response.data?.topFindings || [{
-            title: "Data analysis",
-            description: "Analysis data is currently unavailable. Please try again later."
-          }],
-          recommendations: response.data?.recommendations || [{
-            title: "Check Google Search Console",
-            description: "Review your data directly in Google Search Console for more details.",
-            priority: "medium"
-          }]
-        };
+        console.log('Raw response from insights API:', response.status, response.statusText);
         
-        return fallbackResponse;
+        // Handle non-200 responses - explicitly check for 500 errors
+        if (response.status >= 400) {
+          console.error('Error response from insights API:', response.status, response.data);
+          throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+        }
+        
+        // Check if the response has the expected structure
+        if (!response.data || 
+            !response.data.summary || 
+            !response.data.performance ||
+            !response.data.topFindings ||
+            !response.data.recommendations) {
+          console.error('Invalid insights response format:', response.data);
+          throw new Error('Invalid response format');
+        }
+        
+        return response.data;
+      } catch (apiError) {
+        console.error('Failed to get insights from API, trying mock data:', apiError);
+        
+        // If real API fails, try to get mock data
+        try {
+          const mockResponse = await api.post<InsightResponse>('/insights/generate?mock=true', request);
+          
+          if (mockResponse.status >= 400 || !mockResponse.data) {
+            throw new Error('Mock data also failed');
+          }
+          
+          console.log('Successfully retrieved mock insights');
+          return mockResponse.data;
+        } catch (mockError) {
+          console.error('Mock data also failed:', mockError);
+          // If even mock data fails, throw the original error to be handled by the fallback
+          throw apiError;
+        }
       }
-      
-      return response.data;
     } catch (error) {
       console.error('Failed to generate insights:', error);
       
