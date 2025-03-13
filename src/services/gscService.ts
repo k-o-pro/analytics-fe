@@ -42,6 +42,7 @@ export type TopPagesRequest = {
 
 export type TopPage = {
   url: string;
+  keys?: string[]; // Add keys as optional property
   clicks: number;
   impressions: number;
   ctr: number;
