@@ -116,6 +116,8 @@ const OAuthCallbackPage: React.FC = () => {
               isUserAuthenticated = true;
             } catch (loginError) {
               addDebug('❌ Silent login failed, redirecting to login page');
+              // Store the current URL for redirect after login
+              sessionStorage.setItem('oauth_redirect_url', window.location.href);
               // Redirect to login if silent login fails
               navigate('/login', { 
                 state: { 
@@ -127,6 +129,8 @@ const OAuthCallbackPage: React.FC = () => {
             }
           } else {
             addDebug('🔄 No stored credentials found, redirecting to login');
+            // Store the current URL for redirect after login
+            sessionStorage.setItem('oauth_redirect_url', window.location.href);
             navigate('/login', { 
               state: { 
                 redirectAfterLogin: '/oauth-callback',
@@ -151,9 +155,10 @@ const OAuthCallbackPage: React.FC = () => {
           return;
         }
         
-        // Clear stored code on success
-        addDebug('✅ OAuth callback successful, clearing stored code');
+        // Clear stored code and redirect URL on success
+        addDebug('✅ OAuth callback successful, clearing stored data');
         sessionStorage.removeItem('pending_oauth_code');
+        sessionStorage.removeItem('oauth_redirect_url');
         
         // Clear loading and navigate after successful connection
         addDebug('➡️ Redirecting to settings page');

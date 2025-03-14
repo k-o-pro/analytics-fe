@@ -71,11 +71,26 @@ export const gscService = {
     const fallbackClientId = '724601444957-h1sofo90i307cjln4ds6jbdo601t314m.apps.googleusercontent.com';
     const clientId = process.env['REACT_APP_GOOGLE_CLIENT_ID'] || fallbackClientId;
     
-    // Use "/oauth-callback" as the redirect URI without the hash
-    const redirectUri = `${window.location.origin}/oauth-callback`;
+    // Handle GitHub Pages URL structure
+    const origin = window.location.origin;
+    const pathname = window.location.pathname;
+    const isGitHubPages = pathname.includes('/analytics/'); // Adjust this based on your GitHub Pages path
+    
+    // Construct the redirect URI based on the environment
+    let redirectUri;
+    if (isGitHubPages) {
+      // For GitHub Pages, use the full path including the repository name
+      redirectUri = `${origin}${pathname.split('/').slice(0, -1).join('/')}/oauth-callback`;
+    } else {
+      // For local development or other environments
+      redirectUri = `${origin}/oauth-callback`;
+    }
     
     // For debugging
     console.log('OAuth Debug Info:');
+    console.log('- Origin:', origin);
+    console.log('- Pathname:', pathname);
+    console.log('- Is GitHub Pages:', isGitHubPages);
     console.log('- Redirect URI:', redirectUri);
     console.log('- Client ID:', clientId);
     console.log('- Environment variable present:', process.env['REACT_APP_GOOGLE_CLIENT_ID'] ? 'Yes' : 'No');

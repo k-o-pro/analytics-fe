@@ -51,8 +51,11 @@ instance.interceptors.response.use(
         return instance(originalRequest);
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
-        // Don't remove token during OAuth flow to prevent auth state loss
-        const isOAuthFlow = window.location.pathname.includes('oauth-callback');
+        
+        // Check if we're in the OAuth flow
+        const isOAuthFlow = window.location.pathname.includes('oauth-callback') || 
+                           sessionStorage.getItem('pending_oauth_code') !== null;
+        
         if (!isOAuthFlow) {
           console.log('Not in OAuth flow, clearing token');
           localStorage.removeItem('token');
@@ -64,6 +67,8 @@ instance.interceptors.response.use(
           }, 100);
         } else {
           console.log('In OAuth flow, preserving token state');
+          // Store the current URL to redirect back after login
+          sessionStorage.setItem('oauth_redirect_url', window.location.href);
         }
         return Promise.reject(refreshError);
       }
