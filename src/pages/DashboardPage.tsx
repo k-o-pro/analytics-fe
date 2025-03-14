@@ -6,7 +6,8 @@ import PropertySelector from '../components/dashboard/PropertySelector';
 import DateRangePicker from '../components/dashboard/DateRangePicker';
 import MetricCard from '../components/visualizations/MetricCard';
 import PerformanceChart from '../components/visualizations/PerformanceChart';
-import { gscService, DateRange, GSCProperty } from '../services/gscService';
+import { gscService } from '../services/gscService';
+import { DateRange, GSCProperty } from '../types/api';
 
 // Helper function to calculate summary metrics from GSC data
 const calculateSummaryMetrics = (rows: any[]) => {

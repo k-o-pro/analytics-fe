@@ -22,7 +22,9 @@ import {
 import {
   Add as AddIcon,
   Refresh as RefreshIcon,
-  StarOutline as DefaultIcon
+  Delete as DeleteIcon,
+  Star as StarIcon,
+  StarOutline as StarOutlineIcon
 } from '@mui/icons-material';
 import { gscService } from '../services/gscService';
 import { useAuth } from '../contexts/AuthContext';
@@ -110,6 +112,10 @@ const SettingsPage: React.FC = () => {
     );
   };
 
+  const handleDeleteAccount = () => {
+    // Implementation of handleDeleteAccount function
+  };
+
   return (
     <Container maxWidth="md">
       <Typography variant="h4" component="h1" gutterBottom>
@@ -179,16 +185,16 @@ const SettingsPage: React.FC = () => {
                     {property.isConnected && (
                       <IconButton 
                         edge="end" 
-                        disabled={property.isDefault}
+                        disabled={property.isDefault || false}
                         onClick={() => handleToggleDefault(property.siteUrl)}
                         title={property.isDefault ? 'Default property' : 'Set as default'}
                       >
-                        <DefaultIcon color={property.isDefault ? 'primary' : 'disabled'} />
+                        {property.isDefault ? <StarIcon /> : <StarOutlineIcon />}
                       </IconButton>
                     )}
                     <Switch
                       edge="end"
-                      checked={property.isConnected}
+                      checked={property.isConnected || false}
                       onChange={() => handleToggleConnection(property.siteUrl)}
                     />
                   </Box>
@@ -285,6 +291,32 @@ const SettingsPage: React.FC = () => {
             />
             <ListItemSecondaryAction>
               <Switch edge="end" />
+            </ListItemSecondaryAction>
+          </ListItem>
+        </List>
+      </Paper>
+
+      <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
+        <Typography variant="h6" gutterBottom>
+          Account Management
+        </Typography>
+        <Divider sx={{ mb: 3 }} />
+
+        <List>
+          <ListItem>
+            <ListItemText 
+              primary="Delete Account" 
+              secondary="Permanently delete your account" 
+            />
+            <ListItemSecondaryAction>
+              <IconButton
+                edge="end"
+                disabled={false}
+                onClick={handleDeleteAccount}
+                title="Delete Account"
+              >
+                <DeleteIcon />
+              </IconButton>
             </ListItemSecondaryAction>
           </ListItem>
         </List>

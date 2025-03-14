@@ -13,7 +13,8 @@ import {
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { gscService, GSCProperty } from '../../services/gscService';
+import { gscService } from '../../services/gscService';
+import { GSCProperty } from '../../types/api';
 
 interface PropertySelectorProps {
   selectedProperty: GSCProperty | null;

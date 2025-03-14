@@ -28,7 +28,8 @@ import { useNavigate } from 'react-router-dom';
 
 import PropertySelector from '../components/dashboard/PropertySelector';
 import DateRangePicker from '../components/dashboard/DateRangePicker';
-import { gscService, DateRange, TopPage, GSCProperty } from '../services/gscService';
+import { gscService } from '../services/gscService';
+import { DateRange, TopPage, GSCProperty } from '../types/api';
 import { creditsService } from '../services/creditsService';
 
 const TopPagesPage: React.FC = () => {
@@ -126,13 +127,7 @@ const TopPagesPage: React.FC = () => {
     setPage(0); // Reset to first page when changing date range
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    // Check if need to use credits for pages beyond 10
-    if (newPage * rowsPerPage >= 10 && credits <= 0) {
-      setShowPremiumAlert(true);
-      return;
-    }
-    
+  const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
   };
 
@@ -507,7 +502,7 @@ const TopPagesPage: React.FC = () => {
                       <Tooltip title="Generate insights">
                         <IconButton
                           size="small"
-                          onClick={() => handleViewInsights(page.url)}
+                          onClick={() => page.url && handleViewInsights(page.url)}
                           color="primary"
                         >
                           <InsightIcon fontSize="small" />

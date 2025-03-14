@@ -91,11 +91,11 @@ export const insightsService = {
     } catch (error) {
       console.error('Failed to generate insights:', error);
       
-      // Create a user-friendly error response
-      const fallbackResponse: InsightResponse = {
+      // Return a simplified error response
+      return {
         summary: "Unable to generate insights at this time",
         performance: {
-          trend: "stable",
+          trend: "stable" as const,
           details: "Performance data unavailable due to a service error."
         },
         topFindings: [{
@@ -105,12 +105,9 @@ export const insightsService = {
         recommendations: [{
           title: "Check connectivity",
           description: "Ensure you have a stable internet connection and try again.",
-          priority: "high"
+          priority: "high" as const
         }]
       };
-      
-      // Still throw the error to allow the calling code to handle it
-      throw error;
     }
   },
 

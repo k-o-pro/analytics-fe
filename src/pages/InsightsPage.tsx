@@ -34,7 +34,8 @@ import {
 
 import PropertySelector from '../components/dashboard/PropertySelector';
 import DateRangePicker from '../components/dashboard/DateRangePicker';
-import { gscService, DateRange, GSCProperty } from '../services/gscService';
+import { gscService } from '../services/gscService';
+import { DateRange, GSCProperty } from '../types/api';
 import { insightsService, InsightResponse } from '../services/insightsService';
 import { creditsService } from '../services/creditsService';
 

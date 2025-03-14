@@ -1,6 +1,7 @@
 import { API_URL } from '../config';
 import { getToken } from '../utils/auth';
 import { api } from './api';
+import { ApiResponse, DateRange, GSCProperty, GSCRow, TopPagesResponse, Insights } from '../types/api';
 
 interface SearchAnalyticsParams {
   startDate: string;
@@ -8,25 +9,12 @@ interface SearchAnalyticsParams {
   siteUrl: string;
 }
 
-export type GSCProperty = {
-  siteUrl: string;
-  permissionLevel: string;
-};
-
 export type GSCMetricsRequest = {
   siteUrl: string;
   startDate: string;
   endDate: string;
   dimensions?: string[];
   filters?: any[];
-};
-
-export type GSCRow = {
-  keys: string[];
-  clicks: number;
-  impressions: number;
-  ctr: number;
-  position: number;
 };
 
 export type GSCResponse = {
@@ -40,30 +28,7 @@ export type TopPagesRequest = {
   limit?: number;
 };
 
-export type TopPage = {
-  url: string;
-  keys?: string[]; // Add keys as optional property
-  clicks: number;
-  impressions: number;
-  ctr: number;
-  position: number;
-  deltaClicks?: number;
-  deltaImpressions?: number;
-  deltaCtr?: number;
-  deltaPosition?: number;
-};
-
-export type TopPagesResponse = {
-  pages: TopPage[];
-  limit: number;
-  creditsRemaining: number;
-};
-
-export type DateRange = {
-  startDate: string;
-  endDate: string;
-  label: string;
-};
+export type { DateRange };
 
 // Define type for OAuth callback response
 type OAuthCallbackResponse = {
@@ -104,7 +69,7 @@ export const gscService = {
     
     // Get client ID from environment - hardcoded for now as a fallback if env var fails
     const fallbackClientId = '724601444957-h1sofo90i307cjln4ds6jbdo601t314m.apps.googleusercontent.com';
-    const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || fallbackClientId;
+    const clientId = process.env['REACT_APP_GOOGLE_CLIENT_ID'] || fallbackClientId;
     
     // Use "/oauth-callback" as the redirect URI without the hash
     const redirectUri = `${window.location.origin}/oauth-callback`;
@@ -113,7 +78,7 @@ export const gscService = {
     console.log('OAuth Debug Info:');
     console.log('- Redirect URI:', redirectUri);
     console.log('- Client ID:', clientId);
-    console.log('- Environment variable present:', process.env.REACT_APP_GOOGLE_CLIENT_ID ? 'Yes' : 'No');
+    console.log('- Environment variable present:', process.env['REACT_APP_GOOGLE_CLIENT_ID'] ? 'Yes' : 'No');
     console.log('- User authentication status:', localStorage.getItem('token') ? 'Logged in' : 'Not logged in');
     
     // Force token check - if user is not logged in, redirect to login first
@@ -342,5 +307,20 @@ export const gscService = {
       startDate: prevStart.toISOString().split('T')[0],
       endDate: prevEnd.toISOString().split('T')[0]
     };
+  },
+
+  /**
+   * Get AI-powered insights and recommendations
+   * @param siteUrl - The site URL to analyze
+   * @param dateRange - The date range for analysis
+   * @returns Promise with insights data
+   */
+  getInsights: async (siteUrl: string, dateRange: DateRange): Promise<ApiResponse<Insights>> => {
+    const response = await api.post<ApiResponse<Insights>>('/insights', {
+      siteUrl,
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate
+    });
+    return response.data;
   }
 };

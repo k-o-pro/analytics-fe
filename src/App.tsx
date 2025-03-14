@@ -1,10 +1,12 @@
-import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import CssBaseline from '@mui/material/CssBaseline';
 
 import { useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import ErrorBoundary from './components/layout/ErrorBoundary';
 import PrivateRoute from './components/auth/PrivateRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -33,25 +35,50 @@ function App() {
   }
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        {/* Special route for OAuth callback - outside PrivateRoute to avoid redirect loops */}
-        <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
-        
-        <Route path="/" element={<PrivateRoute />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="top-pages" element={<TopPagesPage />} />
-          <Route path="insights" element={<InsightsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="connect-gsc" element={<ConnectGSCPage />} />
-        </Route>
-        
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </LocalizationProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <CssBaseline />
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            {/* Special route for OAuth callback - outside PrivateRoute to avoid redirect loops */}
+            <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
+            
+            <Route path="/" element={<PrivateRoute />}>
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={
+                <ErrorBoundary>
+                  <DashboardPage />
+                </ErrorBoundary>
+              } />
+              <Route path="top-pages" element={
+                <ErrorBoundary>
+                  <TopPagesPage />
+                </ErrorBoundary>
+              } />
+              <Route path="insights" element={
+                <ErrorBoundary>
+                  <InsightsPage />
+                </ErrorBoundary>
+              } />
+              <Route path="settings" element={
+                <ErrorBoundary>
+                  <SettingsPage />
+                </ErrorBoundary>
+              } />
+              <Route path="connect-gsc" element={
+                <ErrorBoundary>
+                  <ConnectGSCPage />
+                </ErrorBoundary>
+              } />
+            </Route>
+            
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </LocalizationProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

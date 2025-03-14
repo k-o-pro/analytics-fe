@@ -1,44 +1,87 @@
-# Search Console Analytics
+# Search Console Analytics Frontend
 
-A powerful web application that transforms complex Google Search Console data into actionable insights with AI-powered analysis and visualizations.
+A modern React TypeScript application that transforms complex Google Search Console data into actionable insights with AI-powered analysis and visualizations.
 
 ## Overview
 
-Search Console Analytics provides a comprehensive dashboard for analyzing your website's search performance using data from Google Search Console. The application delivers intuitive visualizations, top page analysis, and AI-generated insights to help you understand and improve your site's visibility in search results.
+The Search Console Analytics frontend provides a comprehensive dashboard for analyzing your website's search performance. It delivers intuitive visualizations, top page analysis, and AI-generated insights to help you understand and improve your site's visibility in search results.
 
-## Features
+## Key Features
 
 - **Interactive Dashboard**: View key metrics (clicks, impressions, CTR, position) with performance trends
 - **Top Pages Analysis**: Identify your best-performing pages and opportunities for improvement
 - **AI-Powered Insights**: Generate actionable recommendations based on your search performance data
 - **Multiple Properties**: Connect and manage multiple GSC properties
 - **Historical Data**: Track performance over time with comparative analysis
-- **Credit System**: Premium features accessible via a credit-based system
+- **Dark/Light Theme**: User-selectable theme with system preference detection
+- **TypeScript Support**: Full type safety throughout the application
+- **Responsive Design**: Optimized for both desktop and mobile devices
 
-## Architecture
+## Technology Stack
 
-The application uses a decoupled architecture:
+- **Framework**: React 18 with TypeScript
+- **UI Components**: Material UI 6
+- **Routing**: React Router 6
+- **State Management**: React Context API
+- **Data Fetching**: React Query
+- **Charts**: Recharts
+- **HTTP Client**: Axios
+- **Date Handling**: date-fns
+- **Deployment**: GitHub Pages
 
-- **Frontend**: React/TypeScript single-page application (SPA) hosted on GitHub Pages
-- **Backend**: Cloudflare Workers serverless API endpoints
-- **Database**: Cloudflare D1 (SQLite-compatible) for data storage and retrieval
-- **Authentication**: OAuth 2.0 for Google Search Console API + JWT for application users
+## Project Structure
+
+```
+/src
+  /components        - Reusable UI components
+    /auth            - Authentication components
+    /dashboard       - Dashboard layout and components
+    /insights        - AI insights components
+    /layout          - Layout components
+    /visualizations  - Charts and data visualization
+  /contexts
+    AuthContext.tsx  - Authentication context
+    ThemeContext.tsx - Theme management context
+  /pages             - Main application pages
+  /services          - API service modules
+  /types             - TypeScript type definitions
+  /utils             - Utility functions
+  App.tsx            - Main application component
+  index.tsx          - Entry point
+  theme.ts           - Theme configuration
+```
+
+## Recent Improvements
+
+### TypeScript Integration
+- Added comprehensive type definitions for all API responses
+- Enhanced component props with proper TypeScript interfaces
+- Implemented type-safe state management
+
+### Dark Mode Implementation
+- Created theme context for state management
+- Added theme toggle component in the application header
+- Implemented system preference detection
+- Persisted user preference in localStorage
+
+### Enhanced User Experience
+- Improved error handling with descriptive user feedback
+- Added loading states for better visual feedback
+- Implemented responsive design for mobile optimization
 
 ## Setup & Installation
 
 ### Prerequisites
 
-- Node.js (v14+) and npm
-- Cloudflare account with Workers and D1 enabled
+- Node.js (v16+) and npm
 - Google Cloud Platform account with Search Console API enabled
-- GitHub account for deploying the frontend
 
 ### Local Development
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/search-console-analytics.git
-   cd search-console-analytics
+   git clone https://github.com/yourusername/analytics-fe.git
+   cd analytics-fe
    ```
 
 2. **Install dependencies**
@@ -48,295 +91,72 @@ The application uses a decoupled architecture:
 
 3. **Set up environment variables**
    
-   Create a `.env` file in the project root:
+   Create `.env.development` and `.env.production` files:
    ```
    REACT_APP_API_URL=http://localhost:8787
-   REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id
+   REACT_APP_FRONTEND_URL=http://localhost:3000
    ```
 
-4. **Run frontend development server**
+4. **Run development server**
    ```bash
    npm start
    ```
 
-5. **Run backend development server**
+5. **Type checking**
    ```bash
-   npx wrangler dev
+   npm run typecheck
    ```
 
-### Cloudflare Workers Setup
+## Building and Deployment
 
-1. **Install Wrangler CLI globally**
+1. **Build the application**
    ```bash
-   npm install -g wrangler
+   npm run build
    ```
 
-2. **Authenticate with Cloudflare**
-   ```bash
-   wrangler login
-   ```
-
-3. **Create D1 database**
-   ```bash
-   wrangler d1 create search-analytics-db
-   ```
-
-4. **Apply database migrations**
-   ```bash
-   wrangler d1 execute search-analytics-db --file=./src/schema.sql
-   ```
-
-5. **Create KV namespace for token storage**
-   ```bash
-   wrangler kv:namespace create AUTH_STORE
-   wrangler kv:namespace create AUTH_STORE --preview
-   ```
-
-6. **Update wrangler.toml with your IDs**
-   
-   Edit the `wrangler.toml` file and replace placeholder IDs with the ones generated from the commands above:
-   ```toml
-   # Add KV binding for token storage
-   [[kv_namespaces]]
-   binding = "AUTH_STORE"
-   id = "analytics-be"
-   preview_id = "64f21dad93ce4636bdc4daacd1f275bd"
-
-   # Add D1 database binding
-   [[d1_databases]]
-   binding = "DB"
-   database_name = "analytics-be"
-   database_id = "165cb9e2-49fb-40ee-b02d-58e2c5e072bb"
-   ```
-
-7. **Set up secrets**
-   ```bash
-   wrangler secret put OPENAI_API_KEY
-   wrangler secret put JWT_SECRET
-   wrangler secret put GOOGLE_CLIENT_ID
-   wrangler secret put GOOGLE_CLIENT_SECRET
-   ```
-
-8. **Deploy the worker**
-   ```bash
-   wrangler publish
-   ```
-
-### GitHub Pages Deployment
-
-1. **Update homepage in package.json**
-   
-   Edit `package.json` and set the homepage to your domain:
-   ```json
-   {
-     "homepage": "https://yourdomain.com"
-   }
-   ```
-
-2. **Build and deploy**
+2. **Deploy to GitHub Pages**
    ```bash
    npm run deploy
    ```
 
-3. **Set up GitHub Pages**
-   
-   In your GitHub repository settings:
-   - Go to Pages section
-   - Select the `gh-pages` branch
-   - Set the custom domain if you have one
-   - Enable HTTPS
+## Integration with Backend
 
-4. **Set up environment variables in GitHub Actions**
-   
-   Create a new GitHub Actions workflow file in `.github/workflows/deploy.yml`:
-   ```yaml
-   name: Deploy to GitHub Pages
+This frontend application works with the [Analytics Backend](https://github.com/yourusername/analytics-be) API. Ensure the backend is properly configured and running for full functionality.
 
-   on:
-     push:
-       branches: [main]
+## Authentication Flow
 
-   jobs:
-     build-and-deploy:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v2
-         - name: Install dependencies
-           run: npm ci
-         - name: Build
-           run: npm run build
-           env:
-             REACT_APP_API_URL: https://api.yourdomain.com
-             REACT_APP_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-         - name: Deploy
-           uses: JamesIves/github-pages-deploy-action@4.1.5
-           with:
-             branch: gh-pages
-             folder: build
-   ```
+The application uses OAuth 2.0 for Google Search Console API authentication:
 
-## API Endpoints
+1. User initiates login with Google
+2. After authentication, Google redirects to callback URL with authorization code
+3. Backend exchanges code for access and refresh tokens
+4. JWT token is issued to the frontend client for API authorization
 
-The application exposes the following API endpoints:
+## Theme System
 
-### Authentication
-- `POST /auth/login` - User login
-- `POST /auth/register` - User registration
-- `POST /auth/callback` - OAuth callback
-- `POST /auth/refresh` - Refresh token
+The application supports both light and dark themes:
 
-### Google Search Console
-- `GET /gsc/properties` - Get available GSC properties
-- `POST /gsc/data` - Retrieve GSC metrics data
-- `GET /gsc/top-pages` - Get top pages performance
-
-### Insights
-- `POST /insights/generate` - Generate overall site insights
-- `POST /insights/page/:url` - Generate page-specific insights
-
-### User Management
-- `GET /credits` - Get user credits
-- `POST /credits/use` - Use credits for premium features
-
-## Data Structure
-
-### Cloudflare D1 Schema
-
-```sql
--- Users table
-CREATE TABLE users (
-  id INTEGER PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  name TEXT,
-  created_at TEXT NOT NULL,
-  last_login TEXT,
-  credits INTEGER DEFAULT 5,
-  gsc_refresh_token TEXT,
-  gsc_connected INTEGER DEFAULT 0
-);
-
--- GSC data storage
-CREATE TABLE gsc_data (
-  id INTEGER PRIMARY KEY,
-  user_id INTEGER NOT NULL,
-  site_url TEXT NOT NULL,
-  date_range TEXT NOT NULL,
-  dimensions TEXT NOT NULL,
-  data TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users (id)
-);
-
--- Insights table
-CREATE TABLE insights (
-  id INTEGER PRIMARY KEY,
-  user_id INTEGER NOT NULL,
-  site_url TEXT NOT NULL,
-  date TEXT NOT NULL,
-  type TEXT NOT NULL,
-  content TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users (id)
-);
-
--- Credit usage logs
-CREATE TABLE credit_logs (
-  id INTEGER PRIMARY KEY,
-  user_id INTEGER NOT NULL,
-  amount INTEGER NOT NULL,
-  purpose TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users (id)
-);
-
--- User properties (GSC sites)
-CREATE TABLE user_properties (
-  id INTEGER PRIMARY KEY,
-  user_id INTEGER NOT NULL,
-  site_url TEXT NOT NULL,
-  display_name TEXT,
-  added_at TEXT NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users (id)
-);
-```
-
-## Frontend Structure
-
-```
-/src
-  /components
-    /auth        - Authentication components
-    /dashboard   - Dashboard layout and components
-    /layout      - Layout components
-    /visualizations - Charts and data visualization
-  /contexts
-    AuthContext.tsx - Authentication context
-  /hooks         - Custom hooks
-  /pages         - Main application pages
-  /services      - API service modules
-  /types         - TypeScript type definitions
-  /utils         - Utility functions
-```
-
-## OAuth Configuration
-
-1. **Create OAuth Client ID in Google Cloud Console**
-   - Go to https://console.cloud.google.com
-   - Create a new project or use an existing one
-   - Enable the Google Search Console API
-   - Create OAuth 2.0 credentials
-   - Add authorized redirect URIs:
-     - `https://yourdomain.com/oauth-callback` (production)
-     - `http://localhost:3000/oauth-callback` (development)
-
-2. **Set Client ID and Secret**
-   - Add to frontend environment variables
-   - Add as secrets to Cloudflare Workers
-
-## Security Considerations
-
-- CSRF tokens for form submissions
-- JWT tokens with short expiration
-- Encrypted storage of refresh tokens
-- CORS restrictions
-- Rate limiting for API endpoints
-- Input sanitization
-
-## Credits System
-
-The application includes a credit system for premium features:
-
-- Each user gets 10 credits on signup
-- Credits are consumed for:
-  - Analysis beyond top 10 pages (1 credit per page)
-  - AI insights generation (3 credits per advanced analysis)
-  - Historical data beyond 90 days (2 credits per additional month)
+- System preference detection on initial load
+- User toggle available in the application header
+- Theme preference persisted in localStorage
+- Consistent color scheme across all components
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **API Connection Failures**
-   - Check if Cloudflare Worker is deployed
-   - Verify CORS configuration in `wrangler.toml`
-   - Check API URL in environment variables
+1. **Type Errors**
+   - Run `npm run typecheck` to identify TypeScript issues
+   - Ensure all required type definitions are imported
 
-2. **OAuth Issues**
-   - Verify redirect URIs are correctly set
-   - Check Google Cloud Console API access
-   - Ensure scopes are properly configured
+2. **API Connection Failures**
+   - Check if backend server is running
+   - Verify API URL in environment variables
+   - Check browser console for CORS errors
 
-3. **Data Not Loading**
-   - Check browser console for errors
-   - Verify GSC connection is active
-   - Check if user has appropriate permissions
-
-### Developer Tools
-
-- React Developer Tools for component debugging
-- Network tab in browser DevTools for API requests
-- Wrangler logs for backend issues
+3. **Build Issues**
+   - Clear npm cache: `npm cache clean --force`
+   - Delete node_modules and reinstall dependencies
 
 ## License
 
@@ -345,6 +165,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Acknowledgments
 
 - Google Search Console API documentation
-- Cloudflare Workers and D1 documentation
 - React and Material UI teams
-- OpenAI for the AI insights engine
+- The open-source community for TypeScript type definitions

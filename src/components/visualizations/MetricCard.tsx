@@ -1,11 +1,13 @@
 import React from 'react';
-import { Box, Paper, Typography, Tooltip } from '@mui/material';
+import { Box, Paper, Typography, Tooltip, Skeleton } from '@mui/material';
 import { 
   TrendingUp, 
   TrendingDown, 
   TrendingFlat,
   Info as InfoIcon
 } from '@mui/icons-material';
+
+export type MetricType = 'clicks' | 'impressions' | 'ctr' | 'position';
 
 type MetricCardProps = {
   title: string;
@@ -14,6 +16,7 @@ type MetricCardProps = {
   format?: 'number' | 'percent' | 'position';
   tooltipText?: string;
   isLoading?: boolean;
+  metricType?: MetricType;
 };
 
 const MetricCard: React.FC<MetricCardProps> = ({
@@ -22,7 +25,8 @@ const MetricCard: React.FC<MetricCardProps> = ({
   previousValue,
   format = 'number',
   tooltipText,
-  isLoading = false
+  isLoading = false,
+  metricType = 'clicks'
 }) => {
   const formatValue = (val: number | string): string => {
     if (typeof val === 'string') return val;
@@ -61,16 +65,24 @@ const MetricCard: React.FC<MetricCardProps> = ({
   };
 
   const renderValue = () => {
-    if (isLoading || value === 0) {
+    if (isLoading) {
+      return (
+        <Skeleton
+          variant="text"
+          width="70%"
+          height={48}
+          animation="wave"
+          sx={{ my: 0.5 }}
+        />
+      );
+    }
+    
+    if (value === 0) {
       return '—';
     }
+    
     return formatValue(value);
   };
-  
-  // In JSX:
-  <Typography variant="h4" component="div" sx={{ mt: 1, fontWeight: 500 }}>
-    {renderValue()}
-  </Typography>
 
   // Delta color: green for positive change, red for negative, grey for neutral
   // Note: For position metrics, lower is better, so colors are reversed
@@ -82,6 +94,22 @@ const MetricCard: React.FC<MetricCardProps> = ({
     return 'error.main';
   };
 
+  // Get metric color based on type
+  const getMetricColor = (type: MetricType) => {
+    switch(type) {
+      case 'clicks':
+        return '#3f51b5'; // indigo
+      case 'impressions':
+        return '#2196f3'; // blue
+      case 'ctr':
+        return '#4caf50'; // green
+      case 'position':
+        return '#ff9800'; // orange
+      default:
+        return '#1976d2'; // primary blue
+    }
+  };
+
   return (
     <Paper 
       elevation={2} 
@@ -90,37 +118,90 @@ const MetricCard: React.FC<MetricCardProps> = ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        position: 'relative'
+        position: 'relative',
+        borderLeft: `4px solid ${getMetricColor(metricType)}`,
+        transition: 'all 0.3s ease-in-out',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: (theme) => theme.shadows[4],
+        }
       }}
+      aria-label={`${title} metric: ${!isLoading && typeof value !== 'string' ? formatValue(value) : 'Loading'}`}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="subtitle2" color="text.secondary">
+        <Typography 
+          variant="subtitle2" 
+          color="text.secondary"
+          component="h3"
+          sx={{ fontWeight: 500 }}
+        >
           {title}
         </Typography>
         
         {tooltipText && (
-          <Tooltip title={tooltipText} arrow>
-            <InfoIcon fontSize="small" color="disabled" />
+          <Tooltip 
+            title={tooltipText} 
+            arrow 
+            placement="top"
+            enterTouchDelay={50}
+            leaveTouchDelay={1500}
+          >
+            <InfoIcon 
+              fontSize="small" 
+              color="disabled" 
+              aria-label={`Information about ${title}`}
+              sx={{ cursor: 'help' }}
+            />
           </Tooltip>
         )}
       </Box>
       
-      <Typography variant="h4" component="div" sx={{ mt: 1, fontWeight: 500 }}>
-        {isLoading ? '—' : formatValue(value)}
+      <Typography 
+        variant="h4" 
+        component="div" 
+        sx={{ 
+          mt: 1, 
+          fontWeight: 600,
+          fontSize: { xs: '1.5rem', sm: '2rem' },
+          animation: !isLoading ? 'fadeIn 0.5s ease-in-out' : 'none',
+          '@keyframes fadeIn': {
+            '0%': { opacity: 0 },
+            '100%': { opacity: 1 }
+          }
+        }}
+      >
+        {renderValue()}
       </Typography>
       
-      {previousValue !== undefined && !isLoading && (
-        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-          {renderDeltaIcon()}
-          <Typography 
-            variant="body2" 
-            sx={{ ml: 0.5, color: getDeltaColor() }}
-          >
-            {isNeutral 
-              ? 'No change' 
-              : `${isPositive ? '+' : ''}${delta.toFixed(1)}%`
-            }
-          </Typography>
+      {previousValue !== undefined && (
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            mt: 'auto',
+            pt: 1
+          }}
+        >
+          {isLoading ? (
+            <Skeleton variant="text" width="50%" height={24} animation="wave" />
+          ) : (
+            <>
+              {renderDeltaIcon()}
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  ml: 0.5, 
+                  color: getDeltaColor(),
+                  fontWeight: 500
+                }}
+              >
+                {isNeutral 
+                  ? 'No change' 
+                  : `${isPositive ? '+' : ''}${delta.toFixed(1)}%`
+                }
+              </Typography>
+            </>
+          )}
         </Box>
       )}
     </Paper>
