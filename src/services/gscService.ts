@@ -42,7 +42,7 @@ export const gscService = {
   getProperties: async (): Promise<GSCProperty[]> => {
     try {
       console.log('Fetching GSC properties from API');
-      const response = await api.get<{success: boolean, siteEntry?: GSCProperty[], error?: string, needsConnection?: boolean}>('/gsc/properties');
+      const response = await api.get<{success: boolean, data?: any, siteEntry?: GSCProperty[], error?: string, needsConnection?: boolean}>('/gsc/properties');
       
       console.log('GSC properties response:', response.data);
       
@@ -56,7 +56,18 @@ export const gscService = {
         throw new Error(response.data.error || 'Failed to fetch GSC properties');
       }
       
-      return response.data.siteEntry || [];
+      // Check if data structure contains siteEntry directly or is nested in data
+      if (response.data.siteEntry) {
+        return response.data.siteEntry;
+      } else if (response.data.data && response.data.data.siteEntry) {
+        // The actual property data is in response.data.data.siteEntry
+        console.log('Found properties in nested data structure:', response.data.data.siteEntry);
+        return response.data.data.siteEntry;
+      } else {
+        // Log the structure to help debug
+        console.warn('Unexpected data structure in GSC properties response:', response.data);
+        return [];
+      }
     } catch (error) {
       console.error('Error fetching GSC properties:', error);
       return [];

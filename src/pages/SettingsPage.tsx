@@ -53,12 +53,21 @@ const SettingsPage: React.FC = () => {
       setLoading(true);
       const gscProperties = await gscService.getProperties();
       
+      console.log('Raw GSC properties from API:', gscProperties);
+      
+      if (!gscProperties || gscProperties.length === 0) {
+        console.log('No GSC properties found');
+        setProperties([]);
+        return;
+      }
+      
       const connectedProperties = gscProperties.map(property => ({
         ...property,
-        isConnected: Math.random() > 0.3,
-        isDefault: property.siteUrl.includes('example.com')
+        isConnected: true, // If we received properties, they are connected
+        isDefault: property.siteUrl.includes('example.com') || gscProperties.length === 1 // Default to first if only one exists
       }));
       
+      console.log('Setting properties in state:', connectedProperties);
       setProperties(connectedProperties);
     } catch (error) {
       console.error('Failed to fetch GSC properties:', error);
@@ -114,6 +123,24 @@ const SettingsPage: React.FC = () => {
 
   const handleDeleteAccount = () => {
     // Implementation of handleDeleteAccount function
+  };
+
+  // Add a function to handle manual GSC debugging
+  const handleDebugGSC = async () => {
+    try {
+      setMessage({ text: "Debugging GSC connection...", type: 'info' });
+      await fetchProperties();
+      
+      // Get the current token
+      const token = localStorage.getItem('token');
+      setMessage({ 
+        text: `Debug completed. Token exists: ${!!token}. Check console for details.`, 
+        type: 'info' 
+      });
+    } catch (error) {
+      console.error("Debug failed:", error);
+      setMessage({ text: "Debug failed. See console.", type: 'error' });
+    }
   };
 
   return (
@@ -321,6 +348,75 @@ const SettingsPage: React.FC = () => {
           </ListItem>
         </List>
       </Paper>
+
+      {/* Add this at the bottom of your return JSX, before the closing </Container> */}
+      {process.env.NODE_ENV !== 'production' && (
+        <Paper elevation={3} sx={{ p: 3, mt: 4, bgcolor: '#f5f5f5' }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Debug Information
+          </Typography>
+          <Box sx={{ mb: 2 }}>
+            <Button 
+              variant="outlined" 
+              color="secondary" 
+              onClick={handleDebugGSC}
+              sx={{ mr: 1 }}
+            >
+              Debug GSC Connection
+            </Button>
+            <Button 
+              variant="outlined" 
+              color="secondary" 
+              onClick={() => console.log('Current properties:', properties)}
+            >
+              Log Properties
+            </Button>
+          </Box>
+          
+          <Divider sx={{ mb: 2 }} />
+          
+          <Typography variant="subtitle2" gutterBottom>
+            Properties State:
+          </Typography>
+          <Box 
+            sx={{ 
+              p: 2, 
+              bgcolor: '#e0e0e0', 
+              borderRadius: 1,
+              maxHeight: 200,
+              overflow: 'auto',
+              '& pre': {
+                margin: 0,
+                fontFamily: 'monospace',
+                fontSize: '0.8rem',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word'
+              }
+            }}
+          >
+            <pre>{JSON.stringify(properties, null, 2)}</pre>
+          </Box>
+          
+          <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
+            Auth Status:
+          </Typography>
+          <Box 
+            sx={{ 
+              p: 2, 
+              bgcolor: '#e0e0e0', 
+              borderRadius: 1,
+              '& pre': {
+                margin: 0,
+                fontFamily: 'monospace',
+                fontSize: '0.8rem'
+              }
+            }}
+          >
+            <pre>Token exists: {localStorage.getItem('token') ? 'Yes' : 'No'}</pre>
+            <pre>User: {user ? JSON.stringify(user, null, 2) : 'Not logged in'}</pre>
+          </Box>
+        </Paper>
+      )}
     </Container>
   );
 };
