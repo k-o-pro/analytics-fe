@@ -350,7 +350,7 @@ const SettingsPage: React.FC = () => {
       </Paper>
 
       {/* Add this at the bottom of your return JSX, before the closing </Container> */}
-      {process.env.NODE_ENV !== 'production' && (
+      {process.env['NODE_ENV'] !== 'production' && (
         <Paper elevation={3} sx={{ p: 3, mt: 4, bgcolor: '#f5f5f5' }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
             Debug Information
