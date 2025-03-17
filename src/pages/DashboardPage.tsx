@@ -80,6 +80,9 @@ const DashboardPage: React.FC = () => {
       
       // Make the API request to fetch GSC metrics
       try {
+        // Try with original URL format
+        console.log(`Attempting to fetch metrics with site URL: ${selectedProperty.siteUrl}`);
+        
         const response = await gscService.fetchMetrics({
           siteUrl: selectedProperty.siteUrl,
           startDate: selectedRange.startDate,
@@ -92,6 +95,9 @@ const DashboardPage: React.FC = () => {
         
         // Get performance data for chart
         setPerformanceData(response.rows || []);
+        
+        // If we successfully got data, clear any previous error
+        setError(null);
         
         // Calculate previous period metrics for comparison
         const prevPeriod = gscService.getPreviousPeriod(
@@ -121,17 +127,36 @@ const DashboardPage: React.FC = () => {
       } catch (apiError: any) {
         console.error('Failed to load performance data:', apiError);
         
+        // Try to extract useful information from the error
+        const errorMessage = apiError.message || 'Unknown error occurred';
+        
+        // Check for URL format suggestions
+        if (errorMessage.includes('Try using one of these formats') || 
+            errorMessage.includes('You might try using one of these formats')) {
+          
+          // Extract the suggested format with a regex
+          const match = errorMessage.match(/sc-domain:[^\s,]+/);
+          if (match && match[0]) {
+            const suggestedFormat = match[0];
+            setError(`Site URL format may be incorrect. Would you like to try using "${suggestedFormat}" instead?`);
+            
+            // Add a button to the error Alert that will retry with the suggested format
+            // (This is handled in the render method)
+            return;
+          }
+        }
+        
         // Handle different error types
-        if (apiError.message && apiError.message.includes('Server error')) {
+        if (errorMessage.includes('Server error')) {
           setError('The analytics server encountered an error. This is often temporary - please try again in a few minutes.');
-        } else if (apiError.message && apiError.message.includes('session has expired')) {
+        } else if (errorMessage.includes('session has expired')) {
           setError('Your session has expired. Please refresh the page to log in again.');
-        } else if (apiError.message && apiError.message.includes('rate limit')) {
+        } else if (errorMessage.includes('rate limit')) {
           setError('You have exceeded the rate limit for API requests. Please wait a moment and try again.');
         } else if (!selectedProperty.siteUrl.startsWith('sc-domain:') && !selectedProperty.siteUrl.startsWith('http')) {
           setError(`The property URL format may be incorrect. Try using "sc-domain:${selectedProperty.siteUrl}" instead.`);
         } else {
-          setError('Failed to load performance data. ' + (apiError.message || 'Please try again later.'));
+          setError('Failed to load performance data. ' + errorMessage);
         }
         
         // Reset data on error

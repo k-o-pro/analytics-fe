@@ -285,18 +285,46 @@ export const gscService = {
       // Normalize site URL for GSC
       // GSC URLs can be in different formats: sc-domain:example.com, https://example.com, etc.
       const normalizeSiteUrl = (url: string): string => {
-        // If it already has a proper prefix, leave it alone
-        if (url.startsWith('sc-domain:') || url.startsWith('http://') || url.startsWith('https://')) {
-          return url;
+        const trimmed = url.trim();
+        
+        // If it's already in sc-domain format, just return it
+        if (trimmed.startsWith('sc-domain:')) {
+          return trimmed;
         }
         
-        // Default to https:// if no protocol or sc-domain: prefix
-        return `https://${url}`;
+        // Remove http:// or https:// and trailing slashes for domain-only format
+        if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+          // Extract domain by removing protocol and trailing slashes
+          const domainMatch = trimmed.match(/^https?:\/\/([^\/]+)/);
+          if (domainMatch && domainMatch[1]) {
+            console.log(`Converting URL format from ${trimmed} to sc-domain:${domainMatch[1]}`);
+            return `sc-domain:${domainMatch[1]}`;
+          }
+        }
+        
+        // If it's a plain domain without protocol, try sc-domain format
+        if (!trimmed.includes('://') && !trimmed.startsWith('sc-domain:')) {
+          console.log(`Converting URL format from ${trimmed} to sc-domain:${trimmed}`);
+          return `sc-domain:${trimmed}`;
+        }
+        
+        // Default to returning the URL with https:// if no other formats match
+        return trimmed.startsWith('http') ? trimmed : `https://${trimmed}`;
       };
+
+      // Try to identify GSC property format issues
+      let siteUrl = request.siteUrl.trim();
+      const normalizedUrl = normalizeSiteUrl(siteUrl);
+      
+      if (normalizedUrl !== siteUrl) {
+        console.log(`Normalized URL from "${siteUrl}" to "${normalizedUrl}"`);
+        // Let's actually use the original URL for now, but log the normalization
+        // If it fails, we can suggest trying the normalized format to the user
+      }
 
       // Format request with validated data
       const formattedRequest = {
-        siteUrl: normalizeSiteUrl(request.siteUrl.trim()),
+        siteUrl: siteUrl,
         startDate: formatDate(start.toISOString()),
         endDate: formatDate(end.toISOString()),
         dimensions: Array.isArray(request.dimensions) ? request.dimensions : ['date'],
@@ -306,7 +334,7 @@ export const gscService = {
       console.log('Sending formatted GSC metrics request:', formattedRequest);
 
       // Implement retries for network failures
-      const MAX_RETRIES = 2;
+      const MAX_RETRIES = 3;
       let retryCount = 0;
       let lastError: any = null;
 
@@ -321,6 +349,20 @@ export const gscService = {
 
           if (!Array.isArray(response.data.rows)) {
             console.warn('Invalid response format, expected rows array:', response.data);
+            
+            // Check if there's a suggestion to try a different URL format
+            if (response.data.suggestions && Array.isArray(response.data.suggestions) && response.data.suggestions.length > 0) {
+              console.log('Server suggested trying different URL formats:', response.data.suggestions);
+              
+              // Try the first suggestion automatically if this was our first attempt
+              if (retryCount === 0 && response.data.suggestions[0]) {
+                console.log(`Automatically trying suggested URL format: ${response.data.suggestions[0]}`);
+                formattedRequest.siteUrl = response.data.suggestions[0];
+                retryCount++;
+                continue; // Retry with the suggested format
+              }
+            }
+            
             // Return empty rows as fallback
             return { rows: [] };
           }
@@ -329,6 +371,19 @@ export const gscService = {
         } catch (apiError: any) {
           lastError = apiError;
           retryCount++;
+          
+          // Check if there's a suggestion in the error response to try a different URL format
+          const errorData = apiError.response?.data;
+          if (errorData?.suggestions && Array.isArray(errorData.suggestions) && errorData.suggestions.length > 0) {
+            console.log('Server suggested URL formats in error:', errorData.suggestions);
+            
+            // Try the first suggestion
+            if (errorData.suggestions[0]) {
+              console.log(`Trying suggested URL format from error: ${errorData.suggestions[0]}`);
+              formattedRequest.siteUrl = errorData.suggestions[0];
+              continue; // Retry with the suggested format
+            }
+          }
           
           // Only retry on network errors or 500s, not on 400s (which indicate invalid requests)
           const isRetriable = !apiError.response || apiError.response.status >= 500;
@@ -344,19 +399,49 @@ export const gscService = {
         }
       }
 
-      // If we get here, all retries failed
+      // If we get here, all retries failed - provide detailed error information
+      
+      // Check if we should suggest trying a different URL format
+      let errorMessage = '';
+      let suggestions = [];
+      
+      if (siteUrl.startsWith('https://') || siteUrl.startsWith('http://')) {
+        const domainOnly = siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        suggestions.push(`sc-domain:${domainOnly}`);
+      } else if (!siteUrl.startsWith('sc-domain:')) {
+        suggestions.push(`sc-domain:${siteUrl}`);
+      }
+      
       if (lastError?.response?.status === 500) {
-        console.error('Server error in GSC metrics:', lastError.details || lastError);
-        throw new Error('Server error while fetching GSC metrics. Please try again later.');
+        console.error('Server error in GSC metrics:', lastError);
+        errorMessage = 'Server error while fetching GSC metrics. Please try again later.';
+        
+        if (suggestions.length > 0) {
+          errorMessage += ` You might also try using one of these formats: ${suggestions.join(', ')}`;
+        }
+        
+        throw new Error(errorMessage);
       } else if (lastError?.response?.status === 401) {
         console.error('Authentication error in GSC metrics:', lastError);
         throw new Error('Your session has expired. Please log in again.');
       } else if (lastError?.response?.status === 404) {
         console.warn('Property not found or no data available:', formattedRequest.siteUrl);
+        
+        if (suggestions.length > 0) {
+          errorMessage = `No data found for ${siteUrl}. Try using one of these formats: ${suggestions.join(', ')}`;
+          throw new Error(errorMessage);
+        }
+        
         return { rows: [] }; // Return empty data instead of throwing
       }
       
-      throw lastError || new Error('Failed to fetch GSC metrics after multiple attempts');
+      // For other errors
+      errorMessage = lastError?.message || 'Failed to fetch GSC metrics after multiple attempts';
+      if (suggestions.length > 0) {
+        errorMessage += ` You might try using one of these formats: ${suggestions.join(', ')}`;
+      }
+      
+      throw new Error(errorMessage);
     } catch (error) {
       console.error('Error fetching GSC metrics:', {
         error,
