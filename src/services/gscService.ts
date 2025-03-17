@@ -19,6 +19,10 @@ export type GSCMetricsRequest = {
 
 export type GSCResponse = {
   rows: GSCRow[];
+  suggestions?: string[];
+  message?: string;
+  notFound?: boolean;
+  retried?: boolean;
 };
 
 export type TopPagesRequest = {
