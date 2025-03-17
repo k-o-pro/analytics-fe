@@ -437,6 +437,16 @@ export const gscService = {
         }
         
         return { rows: [] }; // Return empty data instead of throwing
+      } else if (lastError?.response?.status === 403) {
+        console.error('Permission denied for GSC property:', formattedRequest.siteUrl);
+        
+        // Check if the response contains a specific error message
+        const errorData = lastError?.response?.data;
+        if (errorData?.error) {
+          throw new Error(`Permission denied: ${errorData.error}`);
+        }
+        
+        throw new Error(`You don't have permission to access search data for ${siteUrl} in Google Search Console. Make sure you've been granted access to this property in GSC.`);
       }
       
       // For other errors

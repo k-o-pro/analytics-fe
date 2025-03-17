@@ -34,7 +34,21 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
     try {
       setLoading(true);
       setError(null);
+      console.log('Fetching GSC properties...');
       const gscProperties = await gscService.getProperties();
+      
+      console.log('Fetched properties:', gscProperties);
+      
+      // Format check for debugging
+      if (gscProperties.length > 0) {
+        const firstProperty = gscProperties[0];
+        console.log('First property format check:', {
+          siteUrl: firstProperty.siteUrl,
+          permissionLevel: firstProperty.permissionLevel || 'Not specified',
+          startsWithScDomain: firstProperty.siteUrl.startsWith('sc-domain:'),
+          startsWithHttp: firstProperty.siteUrl.startsWith('http')
+        });
+      }
       
       if (!selectedProperty && gscProperties.length > 0) {
         onPropertyChange(gscProperties[0]);
@@ -43,7 +57,19 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
       setProperties(gscProperties);
     } catch (error) {
       console.error('Failed to fetch GSC properties:', error);
-      setError('Failed to load properties');
+      
+      // More descriptive error message based on the error
+      if (error instanceof Error) {
+        if (error.message.includes('auth') || error.message.includes('token') || error.message.includes('login')) {
+          setError('Authentication error. Please log in again.');
+        } else if (error.message.includes('permission')) {
+          setError('Permission issue with Google Search Console. Please reconnect your account.');
+        } else {
+          setError(`Failed to load properties: ${error.message}`);
+        }
+      } else {
+        setError('Failed to load properties');
+      }
     } finally {
       setLoading(false);
     }

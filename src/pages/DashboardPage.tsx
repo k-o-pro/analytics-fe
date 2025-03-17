@@ -152,6 +152,11 @@ const DashboardPage: React.FC = () => {
           setError('Your session has expired. Please refresh the page to log in again.');
         } else if (errorMessage.includes('rate limit')) {
           setError('You have exceeded the rate limit for API requests. Please wait a moment and try again.');
+        } else if (errorMessage.includes('Permission denied') || errorMessage.includes('permission to access')) {
+          setError(
+            `You don't have permission to access data for this property in Google Search Console. 
+            Please verify that you have access to this property in GSC or try using a different property.`
+          );
         } else if (!selectedProperty.siteUrl.startsWith('sc-domain:') && !selectedProperty.siteUrl.startsWith('http')) {
           setError(`The property URL format may be incorrect. Try using "sc-domain:${selectedProperty.siteUrl}" instead.`);
         } else {
@@ -197,6 +202,13 @@ const DashboardPage: React.FC = () => {
   
 
   const handlePropertyChange = (property: GSCProperty) => {
+    console.log('Selected property:', property);
+    
+    // Verify URL format
+    if (!property.siteUrl.startsWith('sc-domain:') && !property.siteUrl.startsWith('http://') && !property.siteUrl.startsWith('https://')) {
+      console.warn('Property URL may not be in the correct format:', property.siteUrl);
+    }
+    
     setSelectedProperty(property);
     setSummaryMetrics({
       clicks: 0,
