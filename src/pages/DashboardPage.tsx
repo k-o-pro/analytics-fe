@@ -67,63 +67,91 @@ const DashboardPage: React.FC = () => {
 
   const fetchPerformanceData = useCallback(async () => {
     if (!selectedProperty) return;
+    
     try {
       setLoading(true);
       setError(null);
-
+      
+      // Log the property and date range we're using
       console.log('Fetching performance data for:', {
         property: selectedProperty.siteUrl,
         dateRange: selectedRange
       });
-
-      // Get previous period date range
-      const { startDate: prevStartDate, endDate: prevEndDate } = 
-        gscService.getPreviousPeriod(selectedRange.startDate, selectedRange.endDate);
-
-      // Fetch current period data
-      const currentResponse = await gscService.fetchMetrics({
-        siteUrl: selectedProperty.siteUrl,
-        startDate: selectedRange.startDate,
-        endDate: selectedRange.endDate
-      });
-
-      // Fetch previous period data
-      const previousResponse = await gscService.fetchMetrics({
-        siteUrl: selectedProperty.siteUrl,
-        startDate: prevStartDate,
-        endDate: prevEndDate
-      });
-
-      if (!currentResponse.rows?.length) {
-        console.warn('No data received for current period');
-        setError('No data available for the selected date range');
-        return;
-      }
-
-      // Calculate metrics for both periods
-      const currentMetrics = calculateSummaryMetrics(currentResponse.rows);
-      const previousMetrics = calculateSummaryMetrics(previousResponse.rows || []);
       
-      console.log('Calculated metrics:', { currentMetrics, previousMetrics });
-
-      setSummaryMetrics(currentMetrics);
-      setPreviousSummaryMetrics(previousMetrics);
-
-      // Format data before setting state
-      const formattedData = currentResponse.rows.map(row => ({
-        ...row,
-        date: new Date(row.keys[0]).toISOString().split('T')[0], // Ensure date is in correct format
-        clicks: Number(row.clicks) || 0,
-        impressions: Number(row.impressions) || 0,
-        ctr: Number(row.ctr) || 0,
-        position: Number(row.position) || 0
-      }));
-
-      setPerformanceData(formattedData);
-
+      // Make the API request to fetch GSC metrics
+      try {
+        const response = await gscService.fetchMetrics({
+          siteUrl: selectedProperty.siteUrl,
+          startDate: selectedRange.startDate,
+          endDate: selectedRange.endDate
+        });
+        
+        // Calculate summary metrics
+        const metrics = calculateSummaryMetrics(response.rows || []);
+        setSummaryMetrics(metrics);
+        
+        // Get performance data for chart
+        setPerformanceData(response.rows || []);
+        
+        // Calculate previous period metrics for comparison
+        const prevPeriod = gscService.getPreviousPeriod(
+          selectedRange.startDate,
+          selectedRange.endDate
+        );
+        
+        try {
+          const prevResponse = await gscService.fetchMetrics({
+            siteUrl: selectedProperty.siteUrl,
+            startDate: prevPeriod.startDate,
+            endDate: prevPeriod.endDate
+          });
+          
+          const prevMetrics = calculateSummaryMetrics(prevResponse.rows || []);
+          setPreviousSummaryMetrics(prevMetrics);
+        } catch (prevPeriodError) {
+          console.warn('Failed to load previous period data:', prevPeriodError);
+          // Not setting an error here as the main data loaded successfully
+          setPreviousSummaryMetrics({
+            clicks: 0,
+            impressions: 0,
+            ctr: 0,
+            position: 0
+          });
+        }
+      } catch (apiError: any) {
+        console.error('Failed to load performance data:', apiError);
+        
+        // Handle different error types
+        if (apiError.message && apiError.message.includes('Server error')) {
+          setError('The analytics server encountered an error. This is often temporary - please try again in a few minutes.');
+        } else if (apiError.message && apiError.message.includes('session has expired')) {
+          setError('Your session has expired. Please refresh the page to log in again.');
+        } else if (apiError.message && apiError.message.includes('rate limit')) {
+          setError('You have exceeded the rate limit for API requests. Please wait a moment and try again.');
+        } else if (!selectedProperty.siteUrl.startsWith('sc-domain:') && !selectedProperty.siteUrl.startsWith('http')) {
+          setError(`The property URL format may be incorrect. Try using "sc-domain:${selectedProperty.siteUrl}" instead.`);
+        } else {
+          setError('Failed to load performance data. ' + (apiError.message || 'Please try again later.'));
+        }
+        
+        // Reset data on error
+        setSummaryMetrics({
+          clicks: 0,
+          impressions: 0,
+          ctr: 0,
+          position: 0
+        });
+        setPreviousSummaryMetrics({
+          clicks: 0,
+          impressions: 0,
+          ctr: 0,
+          position: 0
+        });
+        setPerformanceData([]);
+      }
     } catch (err) {
       console.error('Failed to load performance data:', err);
-      setError('Failed to load performance data. Please check the console for details.');
+      setError('An unexpected error occurred while loading performance data. Please check the console for details.');
     } finally {
       setLoading(false);
     }

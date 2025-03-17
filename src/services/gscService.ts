@@ -282,9 +282,21 @@ export const gscService = {
         throw new Error('Start date must be before end date');
       }
 
+      // Normalize site URL for GSC
+      // GSC URLs can be in different formats: sc-domain:example.com, https://example.com, etc.
+      const normalizeSiteUrl = (url: string): string => {
+        // If it already has a proper prefix, leave it alone
+        if (url.startsWith('sc-domain:') || url.startsWith('http://') || url.startsWith('https://')) {
+          return url;
+        }
+        
+        // Default to https:// if no protocol or sc-domain: prefix
+        return `https://${url}`;
+      };
+
       // Format request with validated data
       const formattedRequest = {
-        siteUrl: request.siteUrl.trim(),
+        siteUrl: normalizeSiteUrl(request.siteUrl.trim()),
         startDate: formatDate(start.toISOString()),
         endDate: formatDate(end.toISOString()),
         dimensions: Array.isArray(request.dimensions) ? request.dimensions : ['date'],
@@ -293,30 +305,58 @@ export const gscService = {
 
       console.log('Sending formatted GSC metrics request:', formattedRequest);
 
-      try {
-        const response = await api.post<GSCResponse>('/gsc/data', formattedRequest);
-        
-        // Validate response structure
-        if (!response.data) {
-          throw new Error('Empty response received from GSC API');
-        }
+      // Implement retries for network failures
+      const MAX_RETRIES = 2;
+      let retryCount = 0;
+      let lastError: any = null;
 
-        if (!Array.isArray(response.data.rows)) {
-          console.warn('Invalid response format, expected rows array:', response.data);
-          // Return empty rows as fallback
-          return { rows: [] };
-        }
+      while (retryCount <= MAX_RETRIES) {
+        try {
+          const response = await api.post<GSCResponse>('/gsc/data', formattedRequest);
+          
+          // Validate response structure
+          if (!response.data) {
+            throw new Error('Empty response received from GSC API');
+          }
 
-        return response.data;
-      } catch (apiError: any) {
-        // Check if it's a server error (500)
-        if (apiError.response?.status === 500) {
-          console.error('Server error in GSC metrics:', apiError.details || apiError);
-          // You might want to implement retry logic here
-          throw new Error('Server error while fetching GSC metrics. Please try again later.');
+          if (!Array.isArray(response.data.rows)) {
+            console.warn('Invalid response format, expected rows array:', response.data);
+            // Return empty rows as fallback
+            return { rows: [] };
+          }
+
+          return response.data;
+        } catch (apiError: any) {
+          lastError = apiError;
+          retryCount++;
+          
+          // Only retry on network errors or 500s, not on 400s (which indicate invalid requests)
+          const isRetriable = !apiError.response || apiError.response.status >= 500;
+          if (!isRetriable || retryCount > MAX_RETRIES) {
+            break;
+          }
+          
+          console.log(`Retry attempt ${retryCount} for GSC metrics after error:`, apiError);
+          
+          // Exponential backoff: 1s, 2s, 4s, etc.
+          const delay = Math.pow(2, retryCount - 1) * 1000;
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
-        throw apiError;
       }
+
+      // If we get here, all retries failed
+      if (lastError?.response?.status === 500) {
+        console.error('Server error in GSC metrics:', lastError.details || lastError);
+        throw new Error('Server error while fetching GSC metrics. Please try again later.');
+      } else if (lastError?.response?.status === 401) {
+        console.error('Authentication error in GSC metrics:', lastError);
+        throw new Error('Your session has expired. Please log in again.');
+      } else if (lastError?.response?.status === 404) {
+        console.warn('Property not found or no data available:', formattedRequest.siteUrl);
+        return { rows: [] }; // Return empty data instead of throwing
+      }
+      
+      throw lastError || new Error('Failed to fetch GSC metrics after multiple attempts');
     } catch (error) {
       console.error('Error fetching GSC metrics:', {
         error,
