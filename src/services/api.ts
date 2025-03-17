@@ -77,23 +77,68 @@ instance.interceptors.response.use(
   }
 );
 
+const handleApiError = (error: any, url: string, data?: any) => {
+  const errorDetails = {
+    url,
+    status: error.response?.status,
+    statusText: error.response?.statusText,
+    data: error.response?.data,
+    requestData: data,
+    timestamp: new Date().toISOString()
+  };
+
+  // Log detailed error info
+  console.error('API Error Details:', errorDetails);
+  
+  // Check for specific error types
+  if (error.response?.status === 500) {
+    console.error('Server error detected. Request details:', {
+      headers: error.config?.headers,
+      baseURL: error.config?.baseURL,
+      method: error.config?.method,
+      data: error.config?.data
+    });
+  }
+
+  // Enhance error object with additional context
+  const enhancedError = error;
+  enhancedError.details = errorDetails;
+  return enhancedError;
+};
+
 export const api = {
   get: <T>(url: string, params?: any) => 
     instance.get<T>(url, { params }),
   
   post: <T>(url: string, data?: any) => {
-    console.log(`Making POST request to ${url}`, { data });
-    return instance.post<T>(url, data).catch(error => {
-      console.error('API Error Details:', {
-        url,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        headers: error.response?.headers,
-        requestData: data
-      });
-      throw error;
+    console.log(`Making POST request to ${url}`, { 
+      url,
+      data,
+      timestamp: new Date().toISOString()
     });
+    
+    // Validate request data
+    if (data && typeof data === 'object') {
+      const hasNullOrUndefined = Object.values(data).some(
+        val => val === null || val === undefined
+      );
+      if (hasNullOrUndefined) {
+        console.warn('Request contains null or undefined values:', data);
+      }
+    }
+    
+    return instance.post<T>(url, data)
+      .then(response => {
+        // Log successful response
+        console.log(`Success response from ${url}:`, {
+          status: response.status,
+          data: response.data
+        });
+        return response;
+      })
+      .catch(error => {
+        throw handleApiError(error, url, data);
+      });
   },
   
   put: <T>(url: string, data?: any) => 

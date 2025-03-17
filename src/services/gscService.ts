@@ -251,35 +251,72 @@ export const gscService = {
   // Fetch GSC metrics data
   fetchMetrics: async (request: GSCMetricsRequest): Promise<GSCResponse> => {
     try {
-      // Validate request parameters
-      if (!request.siteUrl || !request.startDate || !request.endDate) {
-        throw new Error('Missing required parameters: siteUrl, startDate, or endDate');
+      // Comprehensive request validation
+      if (!request.siteUrl?.trim()) {
+        throw new Error('siteUrl is required and cannot be empty');
+      }
+      
+      if (!request.startDate || !request.endDate) {
+        throw new Error('startDate and endDate are required');
       }
 
-      // Format dates to ensure they're in YYYY-MM-DD format
-      const formatDate = (date: string) => {
-        return new Date(date).toISOString().split('T')[0];
+      // Validate date format and range
+      const formatDate = (date: string): string => {
+        const d = new Date(date);
+        if (isNaN(d.getTime())) {
+          throw new Error(`Invalid date format: ${date}`);
+        }
+        return d.toISOString().split('T')[0];
       };
 
+      const start = new Date(request.startDate);
+      const end = new Date(request.endDate);
+      const today = new Date();
+
+      if (end > today) {
+        console.warn('End date is in the future, adjusting to yesterday');
+        end.setDate(today.getDate() - 1);
+      }
+
+      if (start > end) {
+        throw new Error('Start date must be before end date');
+      }
+
+      // Format request with validated data
       const formattedRequest = {
-        ...request,
-        startDate: formatDate(request.startDate),
-        endDate: formatDate(request.endDate),
-        dimensions: request.dimensions || ['date'],
+        siteUrl: request.siteUrl.trim(),
+        startDate: formatDate(start.toISOString()),
+        endDate: formatDate(end.toISOString()),
+        dimensions: Array.isArray(request.dimensions) ? request.dimensions : ['date'],
         rowLimit: 100
       };
 
-      console.log('Fetching GSC metrics with formatted request:', formattedRequest);
-      
-      const response = await api.post<GSCResponse>('/gsc/data', formattedRequest);
-      
-      // Validate response data
-      if (!response.data || !response.data.rows) {
-        console.error('Invalid GSC metrics response:', response.data);
-        throw new Error('Invalid response format from GSC API');
-      }
+      console.log('Sending formatted GSC metrics request:', formattedRequest);
 
-      return response.data;
+      try {
+        const response = await api.post<GSCResponse>('/gsc/data', formattedRequest);
+        
+        // Validate response structure
+        if (!response.data) {
+          throw new Error('Empty response received from GSC API');
+        }
+
+        if (!Array.isArray(response.data.rows)) {
+          console.warn('Invalid response format, expected rows array:', response.data);
+          // Return empty rows as fallback
+          return { rows: [] };
+        }
+
+        return response.data;
+      } catch (apiError: any) {
+        // Check if it's a server error (500)
+        if (apiError.response?.status === 500) {
+          console.error('Server error in GSC metrics:', apiError.details || apiError);
+          // You might want to implement retry logic here
+          throw new Error('Server error while fetching GSC metrics. Please try again later.');
+        }
+        throw apiError;
+      }
     } catch (error) {
       console.error('Error fetching GSC metrics:', {
         error,
