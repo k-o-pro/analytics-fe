@@ -322,8 +322,8 @@ export const gscService = {
       
       if (normalizedUrl !== siteUrl) {
         console.log(`Normalized URL from "${siteUrl}" to "${normalizedUrl}"`);
-        // Let's actually use the original URL for now, but log the normalization
-        // If it fails, we can suggest trying the normalized format to the user
+        // Use the normalized URL instead of the original one, as it's more likely to work with GSC API
+        siteUrl = normalizedUrl;
       }
 
       // Format request with validated data

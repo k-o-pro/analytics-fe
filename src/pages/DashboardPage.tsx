@@ -137,11 +137,10 @@ const DashboardPage: React.FC = () => {
           // Extract the suggested format with a regex
           const match = errorMessage.match(/sc-domain:[^\s,]+/);
           if (match && match[0]) {
-            const suggestedFormat = match[0];
-            setError(`Site URL format may be incorrect. Would you like to try using "${suggestedFormat}" instead?`);
+            setError(`Site URL format may be incorrect. Would you like to try using "${match[0]}" instead?`);
             
             // Add a button to the error Alert that will retry with the suggested format
-            // (This is handled in the render method)
+            // We'll implement this directly in the Alert component in the render method
             return;
           }
         }
@@ -235,9 +234,35 @@ const DashboardPage: React.FC = () => {
             severity="error" 
             sx={{ mb: 2 }}
             action={
-              <Button color="inherit" size="small" onClick={fetchPerformanceData}>
-                Retry
-              </Button>
+              error.includes('Would you like to try using "sc-domain:') ? (
+                <Button 
+                  color="inherit" 
+                  size="small" 
+                  onClick={() => {
+                    // Extract the suggested format
+                    const match = error.match(/\"(sc-domain:[^\"]+)\"/);
+                    if (match && match[1] && selectedProperty) {
+                      // Create a modified property with the suggested URL format
+                      const modifiedProperty = {
+                        ...selectedProperty,
+                        siteUrl: match[1]
+                      };
+                      // Update the selected property and retry
+                      setSelectedProperty(modifiedProperty);
+                      // The useEffect hook will automatically trigger fetchPerformanceData
+                    } else {
+                      // Fallback to regular retry
+                      fetchPerformanceData();
+                    }
+                  }}
+                >
+                  Try Suggested Format
+                </Button>
+              ) : (
+                <Button color="inherit" size="small" onClick={fetchPerformanceData}>
+                  Retry
+                </Button>
+              )
             }
           >
             {error}
