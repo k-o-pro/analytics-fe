@@ -251,17 +251,41 @@ export const gscService = {
   // Fetch GSC metrics data
   fetchMetrics: async (request: GSCMetricsRequest): Promise<GSCResponse> => {
     try {
-      console.log('Fetching GSC metrics:', request); // Debug log
-      const response = await api.post<GSCResponse>('/gsc/data', {
+      // Validate request parameters
+      if (!request.siteUrl || !request.startDate || !request.endDate) {
+        throw new Error('Missing required parameters: siteUrl, startDate, or endDate');
+      }
+
+      // Format dates to ensure they're in YYYY-MM-DD format
+      const formatDate = (date: string) => {
+        return new Date(date).toISOString().split('T')[0];
+      };
+
+      const formattedRequest = {
         ...request,
-        dimensions: ['date'], // Add date dimension for time series
-        rowLimit: 100 // Ensure we get enough data points
-      });
+        startDate: formatDate(request.startDate),
+        endDate: formatDate(request.endDate),
+        dimensions: request.dimensions || ['date'],
+        rowLimit: 100
+      };
+
+      console.log('Fetching GSC metrics with formatted request:', formattedRequest);
       
-      console.log('GSC metrics response:', response.data); // Debug log
+      const response = await api.post<GSCResponse>('/gsc/data', formattedRequest);
+      
+      // Validate response data
+      if (!response.data || !response.data.rows) {
+        console.error('Invalid GSC metrics response:', response.data);
+        throw new Error('Invalid response format from GSC API');
+      }
+
       return response.data;
     } catch (error) {
-      console.error('Error fetching GSC metrics:', error);
+      console.error('Error fetching GSC metrics:', {
+        error,
+        request,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error'
+      });
       throw error;
     }
   },

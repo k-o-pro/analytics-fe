@@ -81,8 +81,20 @@ export const api = {
   get: <T>(url: string, params?: any) => 
     instance.get<T>(url, { params }),
   
-  post: <T>(url: string, data?: any) => 
-    instance.post<T>(url, data),
+  post: <T>(url: string, data?: any) => {
+    console.log(`Making POST request to ${url}`, { data });
+    return instance.post<T>(url, data).catch(error => {
+      console.error('API Error Details:', {
+        url,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        headers: error.response?.headers,
+        requestData: data
+      });
+      throw error;
+    });
+  },
   
   put: <T>(url: string, data?: any) => 
     instance.put<T>(url, data),
