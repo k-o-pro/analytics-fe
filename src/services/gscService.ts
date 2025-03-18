@@ -19,11 +19,16 @@ export type GSCMetricsRequest = {
 
 export type GSCResponse = {
   rows: GSCRow[];
+  data?: {
+    rows: GSCRow[];
+    [key: string]: any;
+  };
   suggestions?: string[];
   message?: string;
   notFound?: boolean;
   retried?: boolean;
   permissionDenied?: boolean;
+  success?: boolean;
 };
 
 export type TopPagesRequest = {
@@ -380,10 +385,26 @@ export const gscService = {
 
           // Log successful response for debugging
           console.log('Successfully received GSC data:', {
-            rowCount: response.data.rows.length,
-            sample: response.data.rows.slice(0, 2),
-            hasPermissionDenied: response.data.permissionDenied === true
+            rowCount: response.data.rows?.length || 0,
+            sample: response.data.rows?.slice(0, 2) || [],
+            hasPermissionDenied: response.data.permissionDenied === true,
+            responseStructure: {
+              success: response.data.success,
+              hasDataProperty: !!response.data.data,
+              hasRows: Array.isArray(response.data.rows),
+              hasDataRows: response.data.data && Array.isArray(response.data.data.rows)
+            }
           });
+
+          // Check if the response has a nested data structure
+          if (response.data.success === true && response.data.data && !response.data.rows) {
+            console.log('Response has nested data structure, restructuring...');
+            // If the backend returns {success: true, data: {rows: [...]}}, restructure it
+            return {
+              ...response.data.data,
+              success: response.data.success
+            };
+          }
 
           return response.data;
         } catch (apiError: any) {

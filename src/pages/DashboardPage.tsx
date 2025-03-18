@@ -90,12 +90,30 @@ const DashboardPage: React.FC = () => {
           endDate: selectedRange.endDate
         });
         
+        // Log the response structure to help debug
+        console.log('GSC API response structure:', {
+          responseKeys: Object.keys(response),
+          hasRows: Array.isArray(response.rows),
+          hasDataProperty: response.data !== undefined,
+          dataType: response.data ? typeof response.data : 'undefined',
+          dataKeys: response.data ? Object.keys(response.data) : []
+        });
+        
+        // Extract rows from the correct location in the response
+        const rows = Array.isArray(response.rows) 
+          ? response.rows 
+          : (response.data && Array.isArray(response.data.rows) 
+              ? response.data.rows 
+              : []);
+              
+        console.log(`Found ${rows.length} rows of data`);
+        
         // Calculate summary metrics
-        const metrics = calculateSummaryMetrics(response.rows || []);
+        const metrics = calculateSummaryMetrics(rows);
         setSummaryMetrics(metrics);
         
         // Get performance data for chart
-        setPerformanceData(response.rows || []);
+        setPerformanceData(rows);
         
         // If we successfully got data, clear any previous error
         setError(null);
@@ -113,7 +131,14 @@ const DashboardPage: React.FC = () => {
             endDate: prevPeriod.endDate
           });
           
-          const prevMetrics = calculateSummaryMetrics(prevResponse.rows || []);
+          // Extract rows from the correct location in the response (same as above)
+          const prevRows = Array.isArray(prevResponse.rows) 
+            ? prevResponse.rows 
+            : (prevResponse.data && Array.isArray(prevResponse.data.rows) 
+                ? prevResponse.data.rows 
+                : []);
+          
+          const prevMetrics = calculateSummaryMetrics(prevRows);
           setPreviousSummaryMetrics(prevMetrics);
         } catch (prevPeriodError) {
           console.warn('Failed to load previous period data:', prevPeriodError);
