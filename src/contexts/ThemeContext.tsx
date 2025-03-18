@@ -112,7 +112,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
           paper: '#1e1e1e',
         },
         text: {
-          primary: 'rgba(255, 255, 255, 0.95)',
+          primary: 'rgba(20, 20, 20, 0.95)',
           secondary: 'rgba(255, 255, 255, 0.7)',
           disabled: 'rgba(255, 255, 255, 0.5)',
         },
