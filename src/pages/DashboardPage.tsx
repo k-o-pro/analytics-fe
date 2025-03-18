@@ -32,10 +32,13 @@ const calculateSummaryMetrics = (rows: any[]) => {
     position: 0
   });
 
+  // Calculate CTR correctly
+  const calculatedCtr = totals.impressions > 0 ? totals.clicks / totals.impressions : 0;
+
   return {
     clicks: totals.clicks,
     impressions: totals.impressions,
-    ctr: totals.ctr / rows.length,
+    ctr: calculatedCtr,
     position: totals.position / rows.length
   };
 };

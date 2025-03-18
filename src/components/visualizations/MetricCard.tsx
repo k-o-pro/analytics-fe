@@ -30,6 +30,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
 }) => {
   const formatValue = (val: number | string): string => {
     if (typeof val === 'string') return val;
+    if (isNaN(val)) return '0%'; // Handle NaN case
     
     switch (format) {
       case 'percent':

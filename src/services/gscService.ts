@@ -23,6 +23,7 @@ export type GSCResponse = {
   message?: string;
   notFound?: boolean;
   retried?: boolean;
+  permissionDenied?: boolean;
 };
 
 export type TopPagesRequest = {
@@ -354,6 +355,12 @@ export const gscService = {
           if (!Array.isArray(response.data.rows)) {
             console.warn('Invalid response format, expected rows array:', response.data);
             
+            // Check for permission denied response
+            if (response.data.permissionDenied) {
+              console.error('Permission denied for GSC property:', formattedRequest.siteUrl);
+              throw new Error(`You don't have permission to access search data for ${formattedRequest.siteUrl} in Google Search Console. Make sure you've been granted access to this property in GSC.`);
+            }
+            
             // Check if there's a suggestion to try a different URL format
             if (response.data.suggestions && Array.isArray(response.data.suggestions) && response.data.suggestions.length > 0) {
               console.log('Server suggested trying different URL formats:', response.data.suggestions);
@@ -370,6 +377,13 @@ export const gscService = {
             // Return empty rows as fallback
             return { rows: [] };
           }
+
+          // Log successful response for debugging
+          console.log('Successfully received GSC data:', {
+            rowCount: response.data.rows.length,
+            sample: response.data.rows.slice(0, 2),
+            hasPermissionDenied: response.data.permissionDenied === true
+          });
 
           return response.data;
         } catch (apiError: any) {
