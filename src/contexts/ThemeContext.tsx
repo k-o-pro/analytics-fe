@@ -1,21 +1,8 @@
-import React, { createContext, ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 
-// Empty interface since we don't need to provide any context values
-interface ThemeContextType {}
-
-const ThemeContext = createContext<ThemeContextType>({});
-
-// This hook won't be needed for theme switching anymore, but keeping it
-// in case other theme-related functionality is added later
-export const useTheme = () => React.useContext(ThemeContext);
-
-interface ThemeProviderProps {
-  children: ReactNode;
-}
-
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const theme = createTheme({
     palette: {
       primary: {
@@ -210,9 +197,5 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     },
   });
 
-  return (
-    <ThemeContext.Provider value={{}}>
-      <MuiThemeProvider theme={theme}>{children}</MuiThemeProvider>
-    </ThemeContext.Provider>
-  );
+  return <MuiThemeProvider theme={theme}>{children}</MuiThemeProvider>;
 };
