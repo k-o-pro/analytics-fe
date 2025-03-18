@@ -7,6 +7,8 @@ interface ThemeContextType {}
 
 const ThemeContext = createContext<ThemeContextType>({});
 
+// This hook won't be needed for theme switching anymore, but keeping it
+// in case other theme-related functionality is added later
 export const useTheme = () => React.useContext(ThemeContext);
 
 interface ThemeProviderProps {
@@ -16,7 +18,6 @@ interface ThemeProviderProps {
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const theme = createTheme({
     palette: {
-      mode: 'light',
       primary: {
         main: '#1976d2',
         light: '#42a5f5',
