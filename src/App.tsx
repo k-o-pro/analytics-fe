@@ -8,6 +8,7 @@ import { useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ErrorBoundary from './components/layout/ErrorBoundary';
 import PrivateRoute from './components/auth/PrivateRoute';
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
@@ -19,7 +20,7 @@ import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
-  const { isLoading } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) {
     return (
@@ -40,13 +41,16 @@ function App() {
         <CssBaseline />
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             {/* Special route for OAuth callback - outside PrivateRoute to avoid redirect loops */}
             <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
             
-            <Route path="/" element={<PrivateRoute />}>
-              <Route index element={<Navigate to="/dashboard" replace />} />
+            {/* Protected routes */}
+            <Route path="/app" element={<PrivateRoute />}>
+              <Route index element={<Navigate to="/app/dashboard" replace />} />
               <Route path="dashboard" element={
                 <ErrorBoundary>
                   <DashboardPage />

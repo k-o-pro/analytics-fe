@@ -53,11 +53,20 @@ const LoginPage: React.FC = () => {
       
       // If there's a redirect parameter, go there
       if (redirectParam) {
-        navigate(`/${redirectParam}`);
+        navigate(`/app/${redirectParam}`);
       } else if (locationState?.redirectAfterLogin) {
-        navigate(locationState.redirectAfterLogin);
+        // If it's an OAuth callback or other special path, use the original path
+        if (locationState.redirectAfterLogin.startsWith('/oauth')) {
+          navigate(locationState.redirectAfterLogin);
+        } else {
+          // Add /app prefix to other redirects if they don't already have it
+          const path = locationState.redirectAfterLogin.startsWith('/app') 
+            ? locationState.redirectAfterLogin 
+            : `/app${locationState.redirectAfterLogin}`;
+          navigate(path);
+        }
       } else {
-        navigate('/dashboard');
+        navigate('/app/dashboard');
       }
     } catch (err) {
       setError('Invalid email or password. Please try again.');
