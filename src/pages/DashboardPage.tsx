@@ -23,12 +23,10 @@ const calculateSummaryMetrics = (rows: any[]) => {
   const totals = rows.reduce((acc, row) => ({
     clicks: acc.clicks + (row.clicks || 0),
     impressions: acc.impressions + (row.impressions || 0),
-    ctr: acc.ctr + (row.ctr || 0),
     position: acc.position + (row.position || 0)
   }), {
     clicks: 0,
     impressions: 0,
-    ctr: 0,
     position: 0
   });
 
