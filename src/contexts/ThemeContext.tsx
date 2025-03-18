@@ -2,7 +2,7 @@ import React, { createContext, ReactNode } from 'react';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 
-// Define an empty interface for context since we no longer need mode toggling
+// Empty interface since we don't need to provide any context values
 interface ThemeContextType {}
 
 const ThemeContext = createContext<ThemeContextType>({});
@@ -14,22 +14,17 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  // Define common palette values
-  const primaryMain = '#1976d2';
-  const secondaryMain = '#9c27b0';
-
-  // Create a theme instance with light mode only
   const theme = createTheme({
     palette: {
       mode: 'light',
       primary: {
-        main: primaryMain,
+        main: '#1976d2',
         light: '#42a5f5',
         dark: '#1565c0',
         contrastText: '#ffffff',
       },
       secondary: {
-        main: secondaryMain,
+        main: '#9c27b0',
         light: '#ba68c8',
         dark: '#7b1fa2',
         contrastText: '#ffffff',
@@ -216,9 +211,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
   return (
     <ThemeContext.Provider value={{}}>
-      <MuiThemeProvider theme={theme}>
-        {children}
-      </MuiThemeProvider>
+      <MuiThemeProvider theme={theme}>{children}</MuiThemeProvider>
     </ThemeContext.Provider>
   );
-}; 
+};
