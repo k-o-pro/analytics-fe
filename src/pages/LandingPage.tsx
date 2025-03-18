@@ -145,7 +145,12 @@ const LandingPage: React.FC = () => {
                   borderRadius: 4, 
                   boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
                   transform: 'perspective(1000px) rotateY(-5deg) rotateX(5deg)',
-                  display: { xs: 'none', md: 'block' }
+                  transition: 'all 0.5s ease-in-out',
+                  display: { xs: 'none', md: 'block' },
+                  '&:hover': {
+                    transform: 'perspective(1000px) rotateY(-8deg) rotateX(8deg) translateY(-10px)',
+                    boxShadow: '0 30px 60px rgba(0,0,0,0.15)',
+                  }
                 }}
               />
             </Grid>

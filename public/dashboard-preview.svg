@@ -1,94 +1,185 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+      100% { transform: translateY(0px); }
+    }
+    @keyframes pulse {
+      0% { opacity: 0.7; }
+      50% { opacity: 1; }
+      100% { opacity: 0.7; }
+    }
+    @keyframes chart-line {
+      0% { stroke-dashoffset: 500; }
+      100% { stroke-dashoffset: 0; }
+    }
+    .dashboard-container:hover .float {
+      animation: float 3s ease-in-out infinite;
+    }
+    .dashboard-container:hover .pulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .dashboard-container:hover .chart-line {
+      animation: chart-line 2s ease-out forwards;
+    }
+    .dashboard-icon {
+      transition: transform 0.3s ease;
+    }
+    .dashboard-container:hover .dashboard-icon {
+      transform: scale(1.1);
+    }
+  </style>
+
   <!-- Dashboard background -->
-  <rect width="800" height="600" rx="16" fill="#FFFFFF"/>
-  
-  <!-- Sidebar -->
-  <rect x="0" y="0" width="200" height="600" fill="#F5F7FA"/>
-  
-  <!-- Sidebar menu items -->
-  <rect x="20" y="100" width="160" height="40" rx="8" fill="#3F51B5" opacity="0.1"/>
-  <rect x="30" y="115" width="20" height="10" rx="2" fill="#3F51B5"/>
-  <rect x="60" y="115" width="100" height="10" rx="2" fill="#3F51B5"/>
-  
-  <rect x="20" y="150" width="160" height="40" rx="8" fill="#FFFFFF"/>
-  <rect x="30" y="165" width="20" height="10" rx="2" fill="#9E9E9E"/>
-  <rect x="60" y="165" width="100" height="10" rx="2" fill="#9E9E9E"/>
-  
-  <rect x="20" y="200" width="160" height="40" rx="8" fill="#FFFFFF"/>
-  <rect x="30" y="215" width="20" height="10" rx="2" fill="#9E9E9E"/>
-  <rect x="60" y="215" width="100" height="10" rx="2" fill="#9E9E9E"/>
-  
-  <rect x="20" y="250" width="160" height="40" rx="8" fill="#FFFFFF"/>
-  <rect x="30" y="265" width="20" height="10" rx="2" fill="#9E9E9E"/>
-  <rect x="60" y="265" width="100" height="10" rx="2" fill="#9E9E9E"/>
-  
-  <!-- App logo -->
-  <rect x="30" y="30" width="140" height="30" rx="4" fill="#3F51B5"/>
-  
-  <!-- Main content area -->
-  <!-- Header -->
-  <rect x="220" y="30" width="560" height="50" rx="8" fill="#FFFFFF"/>
-  <rect x="240" y="45" width="200" height="20" rx="4" fill="#333333"/>
-  <rect x="700" y="45" width="60" height="20" rx="10" fill="#3F51B5"/>
-  
-  <!-- Stats cards -->
-  <rect x="220" y="100" width="175" height="100" rx="8" fill="#FFFFFF" stroke="#EEEEEE" stroke-width="1"/>
-  <rect x="240" y="120" width="100" height="12" rx="2" fill="#9E9E9E"/>
-  <rect x="240" y="150" width="80" height="20" rx="4" fill="#333333"/>
-  <rect x="240" y="180" width="60" height="8" rx="2" fill="#4CAF50"/>
-  
-  <rect x="415" y="100" width="175" height="100" rx="8" fill="#FFFFFF" stroke="#EEEEEE" stroke-width="1"/>
-  <rect x="435" y="120" width="100" height="12" rx="2" fill="#9E9E9E"/>
-  <rect x="435" y="150" width="80" height="20" rx="4" fill="#333333"/>
-  <rect x="435" y="180" width="60" height="8" rx="2" fill="#F44336"/>
-  
-  <rect x="610" y="100" width="175" height="100" rx="8" fill="#FFFFFF" stroke="#EEEEEE" stroke-width="1"/>
-  <rect x="630" y="120" width="100" height="12" rx="2" fill="#9E9E9E"/>
-  <rect x="630" y="150" width="80" height="20" rx="4" fill="#333333"/>
-  <rect x="630" y="180" width="60" height="8" rx="2" fill="#2196F3"/>
-  
-  <!-- Chart -->
-  <rect x="220" y="220" width="365" height="260" rx="8" fill="#FFFFFF" stroke="#EEEEEE" stroke-width="1"/>
-  <rect x="240" y="240" width="150" height="16" rx="4" fill="#333333"/>
-  <rect x="240" y="270" width="325" height="190" rx="4" fill="#F5F7FA"/>
-  
-  <!-- Line chart -->
-  <path d="M250 400 Q275 360 300 380 Q325 350 350 320 Q375 300 400 330 Q425 310 450 280 Q475 290 500 270 Q525 240 550 260" stroke="#3F51B5" stroke-width="3" fill="none"/>
-  
-  <!-- Chart x axis -->
-  <rect x="250" y="420" width="300" height="1" fill="#EEEEEE"/>
-  <rect x="250" y="430" width="20" height="8" rx="2" fill="#9E9E9E"/>
-  <rect x="300" y="430" width="20" height="8" rx="2" fill="#9E9E9E"/>
-  <rect x="350" y="430" width="20" height="8" rx="2" fill="#9E9E9E"/>
-  <rect x="400" y="430" width="20" height="8" rx="2" fill="#9E9E9E"/>
-  <rect x="450" y="430" width="20" height="8" rx="2" fill="#9E9E9E"/>
-  <rect x="500" y="430" width="20" height="8" rx="2" fill="#9E9E9E"/>
-  
-  <!-- Top pages table -->
-  <rect x="610" y="220" width="175" height="260" rx="8" fill="#FFFFFF" stroke="#EEEEEE" stroke-width="1"/>
-  <rect x="630" y="240" width="120" height="16" rx="4" fill="#333333"/>
-  
-  <rect x="630" y="280" width="140" height="1" fill="#EEEEEE"/>
-  <rect x="630" y="310" width="140" height="1" fill="#EEEEEE"/>
-  <rect x="630" y="340" width="140" height="1" fill="#EEEEEE"/>
-  <rect x="630" y="370" width="140" height="1" fill="#EEEEEE"/>
-  <rect x="630" y="400" width="140" height="1" fill="#EEEEEE"/>
-  
-  <rect x="630" y="290" width="80" height="10" rx="2" fill="#333333"/>
-  <rect x="730" y="290" width="30" height="10" rx="2" fill="#3F51B5"/>
-  
-  <rect x="630" y="320" width="80" height="10" rx="2" fill="#333333"/>
-  <rect x="730" y="320" width="25" height="10" rx="2" fill="#3F51B5"/>
-  
-  <rect x="630" y="350" width="80" height="10" rx="2" fill="#333333"/>
-  <rect x="730" y="350" width="20" height="10" rx="2" fill="#3F51B5"/>
-  
-  <rect x="630" y="380" width="80" height="10" rx="2" fill="#333333"/>
-  <rect x="730" y="380" width="15" height="10" rx="2" fill="#3F51B5"/>
-  
-  <!-- Recommendations section -->
-  <rect x="220" y="500" width="565" height="80" rx="8" fill="#FFFFFF" stroke="#EEEEEE" stroke-width="1"/>
-  <rect x="240" y="520" width="180" height="16" rx="4" fill="#333333"/>
-  <rect x="240" y="550" width="500" height="10" rx="2" fill="#9E9E9E"/>
+  <g class="dashboard-container">
+    <rect width="800" height="600" rx="16" fill="#FFFFFF"/>
+    
+    <!-- Sidebar -->
+    <rect x="0" y="0" width="200" height="600" fill="#F5F7FA"/>
+    
+    <!-- Sidebar menu items -->
+    <g class="float" style="transform-origin: center; transform-box: fill-box;">
+      <rect x="20" y="100" width="160" height="40" rx="8" fill="#3F51B5" opacity="0.1"/>
+      <!-- Dashboard icon -->
+      <path d="M30 115 h4 v4 h-4 v-4 M35 115 h4 v4 h-4 v-4 M30 120 h4 v4 h-4 v-4 M35 120 h4 v4 h-4 v-4" fill="#3F51B5"/>
+      <rect x="60" y="115" width="100" height="10" rx="2" fill="#3F51B5"/>
+    </g>
+    
+    <rect x="20" y="150" width="160" height="40" rx="8" fill="#FFFFFF"/>
+    <!-- Chart icon -->
+    <path d="M30 165 v9 h9 v-9 z M32 170 v2 M34 167 v5 M36 169 v3" stroke="#9E9E9E" fill="none" stroke-width="1" class="dashboard-icon"/>
+    <rect x="60" y="165" width="100" height="10" rx="2" fill="#9E9E9E"/>
+    
+    <rect x="20" y="200" width="160" height="40" rx="8" fill="#FFFFFF"/>
+    <!-- Search icon -->
+    <circle cx="34" cy="215" r="4" stroke="#9E9E9E" fill="none" stroke-width="1" class="dashboard-icon"/>
+    <line x1="37" y1="218" x2="39" y2="220" stroke="#9E9E9E" stroke-width="1"/>
+    <rect x="60" y="215" width="100" height="10" rx="2" fill="#9E9E9E"/>
+    
+    <rect x="20" y="250" width="160" height="40" rx="8" fill="#FFFFFF"/>
+    <!-- Settings icon -->
+    <circle cx="34" cy="265" r="4" stroke="#9E9E9E" fill="none" stroke-width="1" class="dashboard-icon"/>
+    <path d="M34 261 v-1 M34 270 v-1 M38 265 h-1 M31 265 h-1 M36.5 267.5 l-0.7 -0.7 M31.5 262.5 l-0.7 -0.7 M36.5 262.5 l0.7 -0.7 M31.5 267.5 l0.7 -0.7" stroke="#9E9E9E" stroke-width="1"/>
+    <rect x="60" y="265" width="100" height="10" rx="2" fill="#9E9E9E"/>
+    
+    <!-- App logo -->
+    <g class="float" style="transform-origin: center; transform-box: fill-box;">
+      <rect x="30" y="30" width="140" height="30" rx="4" fill="#3F51B5"/>
+      <!-- Mini chart icon in logo -->
+      <path d="M45 40 v10 M50 45 v5 M55 42 v8 M60 47 v3" stroke="white" stroke-width="1.5"/>
+    </g>
+    
+    <!-- Main content area -->
+    <!-- Header -->
+    <rect x="220" y="30" width="560" height="50" rx="8" fill="#FFFFFF"/>
+    <rect x="240" y="45" width="200" height="20" rx="4" fill="#333333"/>
+    
+    <!-- User profile button -->
+    <g class="pulse">
+      <rect x="700" y="45" width="60" height="20" rx="10" fill="#3F51B5"/>
+      <circle cx="710" cy="55" r="5" fill="white"/>
+      <rect x="720" y="52" width="30" height="6" rx="2" fill="white"/>
+    </g>
+    
+    <!-- Stats cards -->
+    <g class="float" style="animation-delay: 0.2s; transform-origin: center; transform-box: fill-box;">
+      <rect x="220" y="100" width="175" height="100" rx="8" fill="#FFFFFF" stroke="#EEEEEE" stroke-width="1"/>
+      <rect x="240" y="120" width="100" height="12" rx="2" fill="#9E9E9E"/>
+      <rect x="240" y="150" width="80" height="20" rx="4" fill="#333333"/>
+      <rect x="240" y="180" width="60" height="8" rx="2" fill="#4CAF50"/>
+      <!-- Analytics icon -->
+      <path d="M350 140 m-15 0 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0 M350 140 v-10 M350 140 h10" stroke="#4CAF50" stroke-width="2" fill="none" class="dashboard-icon"/>
+    </g>
+    
+    <g class="float" style="animation-delay: 0.4s; transform-origin: center; transform-box: fill-box;">
+      <rect x="415" y="100" width="175" height="100" rx="8" fill="#FFFFFF" stroke="#EEEEEE" stroke-width="1"/>
+      <rect x="435" y="120" width="100" height="12" rx="2" fill="#9E9E9E"/>
+      <rect x="435" y="150" width="80" height="20" rx="4" fill="#333333"/>
+      <rect x="435" y="180" width="60" height="8" rx="2" fill="#F44336"/>
+      <!-- Trend icon -->
+      <path d="M545 130 l-8 8 -5 -5 -8 8" stroke="#F44336" stroke-width="2" fill="none" class="dashboard-icon"/>
+      <path d="M545 130 h-5 v5" stroke="#F44336" stroke-width="2" fill="none"/>
+    </g>
+    
+    <g class="float" style="animation-delay: 0.6s; transform-origin: center; transform-box: fill-box;">
+      <rect x="610" y="100" width="175" height="100" rx="8" fill="#FFFFFF" stroke="#EEEEEE" stroke-width="1"/>
+      <rect x="630" y="120" width="100" height="12" rx="2" fill="#9E9E9E"/>
+      <rect x="630" y="150" width="80" height="20" rx="4" fill="#333333"/>
+      <rect x="630" y="180" width="60" height="8" rx="2" fill="#2196F3"/>
+      <!-- Search icon -->
+      <circle cx="735" cy="140" r="10" stroke="#2196F3" fill="none" stroke-width="2" class="dashboard-icon"/>
+      <line x1="742" y1="147" x2="748" y2="153" stroke="#2196F3" stroke-width="2"/>
+    </g>
+    
+    <!-- Chart -->
+    <rect x="220" y="220" width="365" height="260" rx="8" fill="#FFFFFF" stroke="#EEEEEE" stroke-width="1"/>
+    <rect x="240" y="240" width="150" height="16" rx="4" fill="#333333"/>
+    <rect x="240" y="270" width="325" height="190" rx="4" fill="#F5F7FA"/>
+    
+    <!-- Line chart with animation -->
+    <path class="chart-line" d="M250 400 Q275 360 300 380 Q325 350 350 320 Q375 300 400 330 Q425 310 450 280 Q475 290 500 270 Q525 240 550 260" 
+          stroke="#3F51B5" stroke-width="3" fill="none" 
+          stroke-dasharray="500" stroke-dashoffset="500"/>
+    
+    <!-- Chart dots -->
+    <circle cx="250" cy="400" r="4" fill="#3F51B5" class="pulse"/>
+    <circle cx="300" cy="380" r="4" fill="#3F51B5" class="pulse" style="animation-delay: 0.1s"/>
+    <circle cx="350" cy="320" r="4" fill="#3F51B5" class="pulse" style="animation-delay: 0.2s"/>
+    <circle cx="400" cy="330" r="4" fill="#3F51B5" class="pulse" style="animation-delay: 0.3s"/>
+    <circle cx="450" cy="280" r="4" fill="#3F51B5" class="pulse" style="animation-delay: 0.4s"/>
+    <circle cx="500" cy="270" r="4" fill="#3F51B5" class="pulse" style="animation-delay: 0.5s"/>
+    <circle cx="550" cy="260" r="4" fill="#3F51B5" class="pulse" style="animation-delay: 0.6s"/>
+    
+    <!-- Chart x axis -->
+    <rect x="250" y="420" width="300" height="1" fill="#EEEEEE"/>
+    <rect x="250" y="430" width="20" height="8" rx="2" fill="#9E9E9E"/>
+    <rect x="300" y="430" width="20" height="8" rx="2" fill="#9E9E9E"/>
+    <rect x="350" y="430" width="20" height="8" rx="2" fill="#9E9E9E"/>
+    <rect x="400" y="430" width="20" height="8" rx="2" fill="#9E9E9E"/>
+    <rect x="450" y="430" width="20" height="8" rx="2" fill="#9E9E9E"/>
+    <rect x="500" y="430" width="20" height="8" rx="2" fill="#9E9E9E"/>
+    
+    <!-- Top pages table -->
+    <rect x="610" y="220" width="175" height="260" rx="8" fill="#FFFFFF" stroke="#EEEEEE" stroke-width="1"/>
+    <rect x="630" y="240" width="120" height="16" rx="4" fill="#333333"/>
+    
+    <rect x="630" y="280" width="140" height="1" fill="#EEEEEE"/>
+    <rect x="630" y="310" width="140" height="1" fill="#EEEEEE"/>
+    <rect x="630" y="340" width="140" height="1" fill="#EEEEEE"/>
+    <rect x="630" y="370" width="140" height="1" fill="#EEEEEE"/>
+    <rect x="630" y="400" width="140" height="1" fill="#EEEEEE"/>
+    
+    <g class="float" style="animation-delay: 0.2s; transform-origin: center; transform-box: fill-box;">
+      <rect x="630" y="290" width="80" height="10" rx="2" fill="#333333"/>
+      <rect x="730" y="290" width="30" height="10" rx="2" fill="#3F51B5"/>
+    </g>
+    
+    <g class="float" style="animation-delay: 0.3s; transform-origin: center; transform-box: fill-box;">
+      <rect x="630" y="320" width="80" height="10" rx="2" fill="#333333"/>
+      <rect x="730" y="320" width="25" height="10" rx="2" fill="#3F51B5"/>
+    </g>
+    
+    <g class="float" style="animation-delay: 0.4s; transform-origin: center; transform-box: fill-box;">
+      <rect x="630" y="350" width="80" height="10" rx="2" fill="#333333"/>
+      <rect x="730" y="350" width="20" height="10" rx="2" fill="#3F51B5"/>
+    </g>
+    
+    <g class="float" style="animation-delay: 0.5s; transform-origin: center; transform-box: fill-box;">
+      <rect x="630" y="380" width="80" height="10" rx="2" fill="#333333"/>
+      <rect x="730" y="380" width="15" height="10" rx="2" fill="#3F51B5"/>
+    </g>
+    
+    <!-- Recommendations section -->
+    <rect x="220" y="500" width="565" height="80" rx="8" fill="#FFFFFF" stroke="#EEEEEE" stroke-width="1"/>
+    <rect x="240" y="520" width="180" height="16" rx="4" fill="#333333"/>
+    <rect x="240" y="550" width="500" height="10" rx="2" fill="#9E9E9E"/>
+    
+    <!-- Lightbulb icon for recommendations -->
+    <g class="pulse" style="animation-delay: 0.7s">
+      <path d="M700 530 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0" fill="#FFD700" opacity="0.3"/>
+      <path d="M707 530 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 M715 538 v8 M711 546 h8" stroke="#FFD700" stroke-width="2" fill="none" class="dashboard-icon"/>
+    </g>
+  </g>
 </svg>
