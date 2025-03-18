@@ -11,7 +11,8 @@ import { DateRange, GSCProperty } from '../types/api';
 
 // Helper function to calculate summary metrics from GSC data
 const calculateSummaryMetrics = (rows: any[]) => {
-  if (!rows.length) {
+  if (!rows || !Array.isArray(rows) || rows.length === 0) {
+    console.log('No valid rows provided to calculateSummaryMetrics');
     return {
       clicks: 0,
       impressions: 0,
@@ -20,10 +21,32 @@ const calculateSummaryMetrics = (rows: any[]) => {
     };
   }
 
-  const totals = rows.reduce((acc, row) => ({
-    clicks: acc.clicks + (row.clicks || 0),
-    impressions: acc.impressions + (row.impressions || 0),
-    position: acc.position + (row.position || 0)
+  // Log the structure of the first row to help debug
+  console.log('Sample row structure:', JSON.stringify(rows[0]));
+
+  // Filter out rows with missing essential data
+  const validRows = rows.filter(row => 
+    row && 
+    typeof row.clicks !== 'undefined' && 
+    typeof row.impressions !== 'undefined'
+  );
+
+  if (validRows.length === 0) {
+    console.log('No valid rows with required metrics found');
+    return {
+      clicks: 0,
+      impressions: 0,
+      ctr: 0,
+      position: 0
+    };
+  }
+
+  console.log(`Processing ${validRows.length} valid rows out of ${rows.length} total`);
+
+  const totals = validRows.reduce((acc, row) => ({
+    clicks: acc.clicks + (Number(row.clicks) || 0),
+    impressions: acc.impressions + (Number(row.impressions) || 0),
+    position: acc.position + (Number(row.position) || 0)
   }), {
     clicks: 0,
     impressions: 0,
@@ -32,12 +55,15 @@ const calculateSummaryMetrics = (rows: any[]) => {
 
   // Calculate CTR correctly
   const calculatedCtr = totals.impressions > 0 ? totals.clicks / totals.impressions : 0;
+  
+  console.log('Calculated totals:', totals);
+  console.log('Calculated CTR:', calculatedCtr);
 
   return {
     clicks: totals.clicks,
     impressions: totals.impressions,
     ctr: calculatedCtr,
-    position: totals.position / rows.length
+    position: validRows.length > 0 ? totals.position / validRows.length : 0
   };
 };
 
@@ -108,8 +134,25 @@ const DashboardPage: React.FC = () => {
               
         console.log(`Found ${rows.length} rows of data`);
         
+        // Debug the actual rows data structure
+        if (rows.length > 0) {
+          console.log('First row sample:', rows[0]);
+          // Check for expected properties
+          const hasExpectedProperties = rows.every(row => 
+            typeof row.clicks !== 'undefined' && 
+            typeof row.impressions !== 'undefined' && 
+            (typeof row.ctr !== 'undefined' || (row.clicks !== undefined && row.impressions !== undefined)) && 
+            typeof row.position !== 'undefined'
+          );
+          console.log('Rows have expected properties:', hasExpectedProperties);
+        } else {
+          console.log('No rows found in response.');
+          console.log('Full response:', JSON.stringify(response).substring(0, 1000));
+        }
+        
         // Calculate summary metrics
         const metrics = calculateSummaryMetrics(rows);
+        console.log('Calculated metrics:', metrics);
         setSummaryMetrics(metrics);
         
         // Get performance data for chart

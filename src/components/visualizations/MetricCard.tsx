@@ -78,11 +78,28 @@ const MetricCard: React.FC<MetricCardProps> = ({
       );
     }
     
-    if (value === 0) {
+    // Add debugging for value type and content
+    console.log(`Rendering ${title} metric:`, {
+      valueType: typeof value,
+      valueIsNaN: typeof value === 'number' && isNaN(value),
+      rawValue: value,
+      valueAsNumber: typeof value === 'string' ? parseFloat(value) : value
+    });
+    
+    if (value === 0 || value === undefined || value === null) {
       return '—';
     }
     
-    return formatValue(value);
+    // Ensure numeric values are properly handled
+    const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+    
+    // Guard against NaN or invalid values
+    if (isNaN(numericValue)) {
+      console.warn(`${title} has NaN value:`, value);
+      return format === 'percent' ? '0%' : '0';
+    }
+    
+    return formatValue(numericValue);
   };
 
   // Delta color: green for positive change, red for negative, grey for neutral

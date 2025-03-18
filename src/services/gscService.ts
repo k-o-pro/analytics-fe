@@ -392,21 +392,44 @@ export const gscService = {
               success: response.data.success,
               hasDataProperty: !!response.data.data,
               hasRows: Array.isArray(response.data.rows),
-              hasDataRows: response.data.data && Array.isArray(response.data.data.rows)
-            }
+              hasDataRows: response.data.data && Array.isArray(response.data.data.rows),
+              dataRowsCount: response.data.data && Array.isArray(response.data.data.rows) ? response.data.data.rows.length : 0,
+              topLevelKeys: Object.keys(response.data)
+            },
+            // Try to stringify the whole response for inspection
+            fullResponse: JSON.stringify(response.data, null, 2).substring(0, 1000) // Limit to 1000 chars to avoid console overflow
           });
 
           // Check if the response has a nested data structure
-          if (response.data.success === true && response.data.data && !response.data.rows) {
-            console.log('Response has nested data structure, restructuring...');
+          if (response.data.success === true && response.data.data) {
+            console.log('Response has data property, inspecting structure:', {
+              dataIsObject: typeof response.data.data === 'object',
+              dataKeys: response.data.data ? Object.keys(response.data.data) : [],
+              dataHasRows: response.data.data && Array.isArray(response.data.data.rows)
+            });
+            
             // If the backend returns {success: true, data: {rows: [...]}}, restructure it
-            return {
-              ...response.data.data,
-              success: response.data.success
-            };
+            if (!response.data.rows && response.data.data && Array.isArray(response.data.data.rows)) {
+              console.log('Response has nested rows in data.rows, restructuring...');
+              return {
+                rows: response.data.data.rows,
+                success: response.data.success
+              };
+            }
+            // If data itself is an array, it might be the rows directly
+            else if (Array.isArray(response.data.data)) {
+              console.log('Response has data as an array, might be rows directly. Length:', response.data.data.length);
+              return { 
+                rows: response.data.data,
+                success: response.data.success 
+              };
+            }
           }
 
-          return response.data;
+          console.log('Returning response without restructuring');
+          
+          // Ensure consistent response format
+          return gscService.ensureValidResponseFormat(response.data);
         } catch (apiError: any) {
           lastError = apiError;
           retryCount++;
@@ -583,5 +606,46 @@ export const gscService = {
       endDate: dateRange.endDate
     });
     return response.data;
+  },
+
+  // Add one final check before returning to ensure we always have a rows array
+  ensureValidResponseFormat: (response: any): GSCResponse => {
+    console.log('Ensuring valid response format');
+    
+    if (!response) {
+      console.warn('Response is null or undefined');
+      return { rows: [] };
+    }
+    
+    // If response already has rows array, return it
+    if (Array.isArray(response.rows)) {
+      console.log('Response already has rows array of length:', response.rows.length);
+      return response;
+    }
+    
+    // If response has data with rows, move it to top level
+    if (response.data && Array.isArray(response.data.rows)) {
+      console.log('Found rows in response.data.rows, length:', response.data.rows.length);
+      return {
+        ...response,
+        rows: response.data.rows
+      };
+    }
+    
+    // If response.data is itself an array, use that as rows
+    if (Array.isArray(response.data)) {
+      console.log('Response.data is an array, using as rows, length:', response.data.length);
+      return {
+        success: response.success,
+        rows: response.data
+      };
+    }
+    
+    // Fallback to empty array if nothing found
+    console.warn('No valid rows data found in response, returning empty array');
+    return { 
+      ...response,
+      rows: [] 
+    };
   }
 };
