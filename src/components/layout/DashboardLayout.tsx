@@ -16,7 +16,7 @@ import {
   Menu,
   MenuItem,
   useMediaQuery,
-  useTheme,
+  useTheme as useMuiTheme,
   Tooltip,
   Badge,
   Paper,
@@ -41,7 +41,6 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import CreditBadge from '../dashboard/CreditBadge';
-import ThemeToggle from './ThemeToggle';
 import GlobalSearchBar from './GlobalSearchBar';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -51,7 +50,7 @@ const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children })
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const theme = useTheme();
+  const theme = useMuiTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -178,9 +177,7 @@ const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children })
           component="div" 
           sx={{ 
             fontWeight: 700,
-            background: theme.palette.mode === 'dark' 
-              ? 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)'
-              : 'linear-gradient(45deg, #1976d2 30%, #2196F3 90%)',
+            background: 'linear-gradient(45deg, #1976d2 30%, #2196F3 90%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             display: 'flex',
@@ -302,17 +299,13 @@ const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children })
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
           transition: 'box-shadow 0.3s ease-in-out',
-          boxShadow: theme.palette.mode === 'dark' 
-            ? '0 4px 20px rgba(0, 0, 0, 0.3)'
-            : '0 2px 10px rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
         }}
         color="default"
       >
         <Toolbar sx={{ 
           justifyContent: 'space-between',
-          bgcolor: theme.palette.mode === 'dark' 
-            ? alpha(theme.palette.background.paper, 0.9)
-            : alpha(theme.palette.background.paper, 0.95),
+          bgcolor: alpha(theme.palette.background.paper, 0.95),
           backdropFilter: 'blur(8px)'
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -387,8 +380,6 @@ const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children })
                 </Badge>
               </IconButton>
             </Tooltip>
-            
-            <ThemeToggle color="inherit" />
             
             {user ? (
               <>

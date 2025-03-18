@@ -54,7 +54,7 @@ instance.interceptors.response.use(
         
         // Check if we're in the OAuth flow
         const isOAuthFlow = window.location.pathname.includes('oauth-callback') || 
-                           sessionStorage.getItem('pending_oauth_code') !== null;
+                          sessionStorage.getItem('pending_oauth_code') !== null;
         
         if (!isOAuthFlow) {
           console.log('Not in OAuth flow, clearing token');
@@ -62,7 +62,7 @@ instance.interceptors.response.use(
           // Use React Router instead of direct location change to maintain state
           setTimeout(() => {
             if (window.location.pathname !== '/login') {
-              window.location.href = '/login';
+              window.location.href = '/#/login';
             }
           }, 100);
         } else {

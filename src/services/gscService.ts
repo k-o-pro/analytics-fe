@@ -101,10 +101,10 @@ export const gscService = {
     let redirectUri;
     if (isGitHubPages) {
       // For GitHub Pages, use the full path including the repository name
-      redirectUri = `${origin}${pathname.split('/').slice(0, -1).join('/')}/oauth-callback`;
+      redirectUri = `${origin}${pathname.split('/').slice(0, -1).join('/')}/#/oauth-callback`;
     } else {
       // For local development or other environments
-      redirectUri = `${origin}/oauth-callback`;
+      redirectUri = `${origin}/#/oauth-callback`;
     }
     
     // For debugging
@@ -120,7 +120,7 @@ export const gscService = {
     // Force token check - if user is not logged in, redirect to login first
     if (!localStorage.getItem('token')) {
       console.warn('User not logged in before GSC connection attempt - redirecting to login first');
-      window.location.href = '/login?redirect=connect-gsc';
+      window.location.href = '/#/login?redirect=connect-gsc';
       return '';
     }
     
