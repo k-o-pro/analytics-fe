@@ -1,42 +1,83 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <link rel="canonical" href="https://analytics.k-o.pro/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta robots="index, follow" />
-    <meta
-      name="description"
-      content="Analytics by k-o.pro - Actionable insights from your search data"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
-    />
-    <title>Search Console Analytics by k-o.pro</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!-- Single Page Apps for GitHub Pages -->
-    <script type="text/javascript">
-      // Single Page Apps for GitHub Pages
-      // MIT License
-      // https://github.com/rafgraph/spa-github-pages
-      (function(l) {
-        if (l.search[1] === '/' ) {
-          var decoded = l.search.slice(1).split('&').map(function(s) {
-            return s.replace(/~and~/g, '&')
-          }).join('?');
-          window.history.replaceState(null, null,
-              l.pathname.slice(0, -1) + decoded + l.hash
-          );
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="icon" href="/favicon.ico"/><link rel="canonical" href="https://analytics.k-o.pro/"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="theme-color" content="#000000"/><meta robots="index, follow"/><meta name="description" content="Analytics by k-o.pro - Actionable insights from your search data"/><link rel="apple-touch-icon" href="/logo192.png"/><link rel="manifest" href="/manifest.json"/><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"/><title>Search Console Analytics by k-o.pro</title><script defer="defer" src="/static/js/main.a498ec53.js"></script><script type="text/javascript">
+  // Redirect non-hash paths to hash-based routing
+  (function() {
+    var pathname = window.location.pathname;
+    var search = window.location.search;
+    var hash = window.location.hash;
+    var origin = window.location.origin;
+    
+    // Skip if already using hash-based routing or it's the root
+    if (hash || pathname === "/" || pathname === "/index.html") {
+      return;
+    }
+    
+    // Remove any trailing slash
+    if (pathname.endsWith('/')) {
+      pathname = pathname.slice(0, -1);
+    }
+    
+    // Handle special cases
+    if (pathname === "/app") {
+      window.location.replace(origin + "/#/app/dashboard");
+      return;
+    }
+    
+    // Convert standard path to hash path
+    window.location.replace(origin + "/#" + pathname + search);
+  })();
+</script><script type="text/javascript">
+  // Single Page Apps for GitHub Pages
+  (function(l) {
+    if (l.search[1] === '/' ) {
+      var decoded = l.search.slice(1).split('&').map(function(s) {
+        return s.replace(/~and~/g, '&')
+      }).join('?');
+      window.history.replaceState(null, null,
+          l.pathname.slice(0, -1) + decoded + l.hash
+      );
+    }
+  }(window.location))
+</script>
+<!-- Fix for chart data processing -->
+<script type="text/javascript">
+  // This script fixes the chart data processing issue
+  document.addEventListener('DOMContentLoaded', function() {
+    // Create a MutationObserver to watch for chart components being added to the DOM
+    const observer = new MutationObserver(function(mutations) {
+      // Look for chart containers
+      const chartElements = document.querySelectorAll('[data-testid="performance-chart"]');
+      if (chartElements.length > 0) {
+        // Fix chart data if needed
+        fixChartData();
+      }
+    });
+
+    // Start observing the document body for changes
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Function to patch chart data processing
+    function fixChartData() {
+      // Monitor for chart data in console
+      const originalConsoleLog = console.log;
+      console.log = function(...args) {
+        // Check if this is chart data logging
+        if (args.length > 0 && typeof args[0] === 'string' && args[0].includes('Chart data:')) {
+          // Get the chart data object
+          const chartData = args[1];
+          if (chartData && chartData.originalData && chartData.originalData.length > 0 && (!chartData.validData || chartData.validData.length === 0)) {
+            // Copy originalData to validData if validData is empty
+            chartData.validData = [...chartData.originalData];
+            
+            // Force update of all recharts components
+            const chartComponents = document.querySelectorAll('.recharts-wrapper');
+            if (chartComponents.length > 0) {
+              // Trigger resize event to force recharts to update
+              window.dispatchEvent(new Event('resize'));
+            }
+          }
         }
-      }(window.location))
-    </script>
-  </body>
-</html>
+        originalConsoleLog.apply(console, args);
+      };
+    }
+  });
+</script></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div></body></html>

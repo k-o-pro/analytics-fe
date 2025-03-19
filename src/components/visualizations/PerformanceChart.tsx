@@ -86,7 +86,12 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
     return data
       .filter(item => {
         try {
-          // Validate date and metrics
+          // Check if item has keys array (from GSC API format)
+          if (Array.isArray(item.keys) && item.keys.length > 0) {
+            return true;
+          }
+          
+          // Or check if it has a direct date property
           const validDate = item.date && !isNaN(new Date(item.date).getTime());
           const hasMetrics = metrics.some(metric => typeof item[metric] === 'number');
           return validDate && hasMetrics;
@@ -95,16 +100,27 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
           return false;
         }
       })
-      .map(item => ({
-        ...item,
-        // Format date consistently
-        date: format(new Date(item.date), 'yyyy-MM-dd'),
-        // Ensure all metrics are numbers
-        ...metrics.reduce((acc, metric) => ({
-          ...acc,
-          [metric]: typeof item[metric] === 'number' ? item[metric] : 0
-        }), {})
-      }))
+      .map(item => {
+        // Determine the date (either from keys array or direct date property)
+        let dateValue = item.date;
+        
+        // If we have keys array from GSC API format, use the first key as date
+        if (Array.isArray(item.keys) && item.keys.length > 0) {
+          dateValue = item.keys[0];
+        }
+        
+        return {
+          // Add all existing properties
+          ...item,
+          // Format date consistently
+          date: format(new Date(dateValue), 'yyyy-MM-dd'),
+          // Ensure all metrics are numbers
+          ...metrics.reduce((acc, metric) => ({
+            ...acc,
+            [metric]: typeof item[metric] === 'number' ? item[metric] : 0
+          }), {})
+        };
+      })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [data, metrics]);
 
@@ -163,7 +179,11 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
   }
 
   return (
-    <Paper elevation={2} sx={{ p: 2 }}>
+    <Paper 
+      elevation={2} 
+      sx={{ p: 2 }}
+      data-testid="performance-chart"
+    >
       <Typography variant="h6" gutterBottom>
         {title}
       </Typography>
