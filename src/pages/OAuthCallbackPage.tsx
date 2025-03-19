@@ -30,11 +30,12 @@ const OAuthCallbackPage: React.FC = () => {
         // Get code from URL parameters - handle both search and hash params
         let code = null;
         
-        // First try from query parameters
+        // First try from query parameters (non-fragment URL)
         const queryParams = new URLSearchParams(location.search);
         code = queryParams.get('code');
         
-        // If not found, try from hash parameters (for hash router)
+        // If not found and we have a hash, try from hash parameters 
+        // (this is a fallback for any existing links with the old format)
         if (!code && location.hash) {
           const hashParams = new URLSearchParams(location.hash.substring(1));
           code = hashParams.get('code');
