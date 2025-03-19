@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Grid, Box, Typography, Paper, Alert, Button, Divider } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { WebIcon, SearchIcon, SettingsIcon } from '@mui/icons-material';
+import { Language as WebIcon, Search as SearchIcon, Settings as SettingsIcon } from '@mui/icons-material';
 
 import PropertySelector from '../components/dashboard/PropertySelector';
 import DateRangePicker from '../components/dashboard/DateRangePicker';
 import MetricCard from '../components/visualizations/MetricCard';
 import PerformanceChart from '../components/visualizations/PerformanceChart';
+import ActionCard from '../components/dashboard/ActionCard';
 import { gscService } from '../services/gscService';
 import { DateRange, GSCProperty } from '../types/api';
 
