@@ -101,10 +101,10 @@ export const gscService = {
     let redirectUri;
     if (isGitHubPages) {
       // For GitHub Pages, use the full path including the repository name
-      redirectUri = `${origin}${pathname.split('/').slice(0, -1).join('/')}/#/oauth-callback`;
+      redirectUri = `${origin}${pathname.split('/').slice(0, -1).join('/')}/oauth-callback`;
     } else {
       // For local development or other environments
-      redirectUri = `${origin}/#/oauth-callback`;
+      redirectUri = `${origin}/oauth-callback`;
     }
     
     // For debugging
