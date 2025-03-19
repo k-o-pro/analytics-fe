@@ -19,6 +19,7 @@ interface DataPoint {
   impressions?: number;
   ctr?: number;
   position?: number;
+  keys?: string[];
 }
 
 type MetricType = 'clicks' | 'impressions' | 'ctr' | 'position';
