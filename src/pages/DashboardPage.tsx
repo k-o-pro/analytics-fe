@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Grid, Box, Typography, Paper, Alert, Button, Divider } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { WebIcon, SearchIcon, SettingsIcon } from '@mui/icons-material';
 
 import PropertySelector from '../components/dashboard/PropertySelector';
 import DateRangePicker from '../components/dashboard/DateRangePicker';
@@ -91,6 +92,17 @@ const DashboardPage: React.FC = () => {
     ctr: 0,
     position: 0
   });
+
+  const getHashPath = (path: string) => {
+    // If path already starts with a hash, return it as is
+    if (path.startsWith('#')) return path;
+    
+    // If path starts with a slash, add the hash before it
+    if (path.startsWith('/')) return `#${path}`;
+    
+    // Otherwise, add hash and slash
+    return `#/${path}`;
+  };
 
   const fetchPerformanceData = useCallback(async () => {
     if (!selectedProperty) return;
@@ -208,8 +220,7 @@ const DashboardPage: React.FC = () => {
           if (match && match[0]) {
             setError(`Site URL format may be incorrect. Would you like to try using "${match[0]}" instead?`);
             
-            // Add a button to the error Alert that will retry with the suggested format
-            // We'll implement this directly in the Alert component in the render method
+            // Add a button to the error Alert component in the render method
             return;
           }
         }
@@ -300,7 +311,7 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleConnectGSC = () => {
-    navigate('/connect-gsc');
+    navigate(getHashPath('/connect-gsc'));
   };
 
   return (
@@ -471,31 +482,28 @@ const DashboardPage: React.FC = () => {
             <Divider sx={{ mb: 2 }} />
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6} md={4}>
-                <Button 
-                  fullWidth 
-                  variant="outlined" 
-                  onClick={() => navigate('/top-pages')}
-                >
-                  View Top Pages
-                </Button>
+                <ActionCard
+                  title="View Top Pages"
+                  description="See which pages get the most traffic and how they perform"
+                  icon={<WebIcon fontSize="large" />}
+                  onClick={() => navigate(getHashPath('/top-pages'))}
+                />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
-                <Button 
-                  fullWidth 
-                  variant="outlined"
-                  onClick={() => navigate('/insights')}
-                >
-                  Generate Insights
-                </Button>
+                <ActionCard
+                  title="Analyze Keywords"
+                  description="Discover what search terms bring users to your site"
+                  icon={<SearchIcon fontSize="large" />}
+                  onClick={() => navigate(getHashPath('/insights'))}
+                />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
-                <Button 
-                  fullWidth 
-                  variant="outlined"
-                  onClick={() => navigate('/settings')}
-                >
-                  Manage Properties
-                </Button>
+                <ActionCard
+                  title="Manage Settings"
+                  description="Configure your Search Console connections and preferences"
+                  icon={<SettingsIcon fontSize="large" />}
+                  onClick={() => navigate(getHashPath('/settings'))}
+                />
               </Grid>
             </Grid>
           </Paper>

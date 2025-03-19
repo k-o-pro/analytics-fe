@@ -84,20 +84,36 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
 
   // Better data validation and formatting
   const validData = React.useMemo(() => {
+    console.log('Raw data received by chart:', JSON.stringify(data.slice(0, 2)));
+    
     return data
       .filter(item => {
         try {
+          // Add more detailed logging
+          console.debug('Validating data point:', item);
+          
           // Check if item has keys array (from GSC API format)
           if (Array.isArray(item.keys) && item.keys.length > 0) {
+            console.debug('Valid item with keys array:', item);
             return true;
           }
           
           // Or check if it has a direct date property
           const validDate = item.date && !isNaN(new Date(item.date).getTime());
-          const hasMetrics = metrics.some(metric => typeof item[metric] === 'number');
-          return validDate && hasMetrics;
+          const hasMetrics = metrics.some(metric => 
+            typeof item[metric] === 'number' || 
+            (typeof item[metric] === 'string' && !isNaN(parseFloat(item[metric] as string)))
+          );
+          
+          if (validDate && hasMetrics) {
+            console.debug('Valid item with date and metrics:', item);
+            return true;
+          }
+          
+          console.debug('Invalid item:', item);
+          return false;
         } catch (e) {
-          console.error('Invalid data point:', item);
+          console.error('Error validating data point:', item, e);
           return false;
         }
       })
@@ -110,7 +126,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
           dateValue = item.keys[0];
         }
         
-        return {
+        const formattedItem = {
           // Add all existing properties
           ...item,
           // Format date consistently
@@ -118,9 +134,14 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
           // Ensure all metrics are numbers
           ...metrics.reduce((acc, metric) => ({
             ...acc,
-            [metric]: typeof item[metric] === 'number' ? item[metric] : 0
+            [metric]: typeof item[metric] === 'number' 
+              ? item[metric] 
+              : (typeof item[metric] === 'string' ? parseFloat(item[metric] as string) : 0)
           }), {})
         };
+        
+        console.debug('Formatted item:', formattedItem);
+        return formattedItem;
       })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [data, metrics]);

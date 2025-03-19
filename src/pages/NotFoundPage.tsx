@@ -41,7 +41,7 @@ const NotFoundPage: React.FC = () => {
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
               component={Link}
-              to="/#/"
+              to="/#/app/dashboard"
               variant="contained"
               color="primary"
             >

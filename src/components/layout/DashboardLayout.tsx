@@ -98,8 +98,24 @@ const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children })
     logout();
   };
 
+  const getHashPath = (path: string) => {
+    // If path already starts with a hash, return it as is
+    if (path.startsWith('#')) return path;
+    
+    // If path starts with a slash, add the hash before it
+    if (path.startsWith('/')) return `#${path}`;
+    
+    // Otherwise, add hash and slash
+    return `#/${path}`;
+  };
+
   const handleBack = () => {
     navigate(-1);
+  };
+
+  const handleDrawerItemClick = (newValue: string) => {
+    setMobileOpen(false);
+    navigate(getHashPath(newValue));
   };
 
   const menuItems = [
@@ -413,7 +429,10 @@ const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children })
                     </Typography>
                   </Box>
                   <Divider />
-                  <MenuItem onClick={() => { handleMenuClose(); navigate('/settings'); }}>
+                  <MenuItem onClick={() => { 
+                    handleMenuClose(); 
+                    navigate(getHashPath('/settings')); 
+                  }}>
                     <ListItemIcon>
                       <SettingsIcon fontSize="small" />
                     </ListItemIcon>
