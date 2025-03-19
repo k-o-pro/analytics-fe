@@ -177,7 +177,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 setStartDate(newValue);
                 setError(null);
               }}
-              maxDate={endDate || undefined}
+              {...(endDate ? { maxDate: endDate } : {})}
               slotProps={{ textField: { size: 'small', fullWidth: true } }}
             />
 
@@ -188,7 +188,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 setEndDate(newValue);
                 setError(null);
               }}
-              minDate={startDate || undefined}
+              {...(startDate ? { minDate: startDate } : {})}
               maxDate={new Date()}
               slotProps={{ textField: { size: 'small', fullWidth: true } }}
             />
