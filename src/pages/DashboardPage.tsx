@@ -312,7 +312,7 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleConnectGSC = () => {
-    navigate(getHashPath('/connect-gsc'));
+    navigate(getHashPath('/app/connect-gsc'));
   };
 
   return (
@@ -487,7 +487,7 @@ const DashboardPage: React.FC = () => {
                   title="View Top Pages"
                   description="See which pages get the most traffic and how they perform"
                   icon={<WebIcon fontSize="large" />}
-                  onClick={() => navigate(getHashPath('/top-pages'))}
+                  onClick={() => navigate(getHashPath('/app/top-pages'))}
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
@@ -495,7 +495,7 @@ const DashboardPage: React.FC = () => {
                   title="Analyze Keywords"
                   description="Discover what search terms bring users to your site"
                   icon={<SearchIcon fontSize="large" />}
-                  onClick={() => navigate(getHashPath('/insights'))}
+                  onClick={() => navigate(getHashPath('/app/insights'))}
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
@@ -503,7 +503,7 @@ const DashboardPage: React.FC = () => {
                   title="Manage Settings"
                   description="Configure your Search Console connections and preferences"
                   icon={<SettingsIcon fontSize="large" />}
-                  onClick={() => navigate(getHashPath('/settings'))}
+                  onClick={() => navigate(getHashPath('/app/settings'))}
                 />
               </Grid>
             </Grid>

@@ -163,10 +163,8 @@ const OAuthCallbackPage: React.FC = () => {
         // Clear loading and navigate after successful connection
         addDebug('➡️ Redirecting to settings page');
         setLoading(false);
-        navigate('/settings', { 
-          state: { 
-            message: 'Google Search Console connected successfully!' 
-          } 
+        navigate('/app/settings', {
+          state: { message: 'Google Search Console connected successfully!' }
         });
         
       } catch (err) {
@@ -185,7 +183,7 @@ const OAuthCallbackPage: React.FC = () => {
   };
 
   const handleCancel = () => {
-    navigate('/settings');
+    navigate('/app/settings');
   };
 
   return (

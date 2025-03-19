@@ -86,8 +86,8 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
     }
   };
 
-  const handleAddProperty = () => {
-    navigate('/connect-gsc');
+  const handleConnectGSC = () => {
+    navigate('/app/connect-gsc');
   };
 
   if (loading) {
@@ -120,7 +120,7 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
         <Button
           variant="outlined"
           startIcon={<AddIcon />}
-          onClick={handleAddProperty}
+          onClick={handleConnectGSC}
           size="small"
         >
           Connect Google Search Console
@@ -151,7 +151,7 @@ const PropertySelector: React.FC<PropertySelectorProps> = ({
       <Button
         variant="text"
         startIcon={<AddIcon />}
-        onClick={handleAddProperty}
+        onClick={handleConnectGSC}
         sx={{ ml: 1 }}
         size="small"
       >

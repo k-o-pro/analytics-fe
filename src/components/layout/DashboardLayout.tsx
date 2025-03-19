@@ -114,10 +114,10 @@ const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children })
   };
 
   const menuItems = [
-    { path: '/dashboard', icon: <DashboardIcon />, text: 'Dashboard', label: 'View your analytics dashboard' },
-    { path: '/top-pages', icon: <ArticleIcon />, text: 'Top Pages', label: 'View your top performing pages' },
-    { path: '/insights', icon: <InsightsIcon />, text: 'Insights', label: 'Get AI-powered recommendations' },
-    { path: '/settings', icon: <SettingsIcon />, text: 'Settings', label: 'Manage your account settings' },
+    { path: '/app/dashboard', icon: <DashboardIcon />, text: 'Dashboard', label: 'View your analytics dashboard' },
+    { path: '/app/top-pages', icon: <ArticleIcon />, text: 'Top Pages', label: 'View your top performing pages' },
+    { path: '/app/insights', icon: <InsightsIcon />, text: 'Insights', label: 'Get AI-powered recommendations' },
+    { path: '/app/settings', icon: <SettingsIcon />, text: 'Settings', label: 'Manage your account settings' },
   ];
 
   // Get the current page's title and icon
@@ -139,7 +139,7 @@ const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children })
         }}
       >
         <Link 
-          to="/dashboard" 
+          to="/app/dashboard" 
           style={{ 
             color: theme.palette.text.secondary,
             textDecoration: 'none',
@@ -429,7 +429,7 @@ const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children })
                   <Divider />
                   <MenuItem onClick={() => { 
                     handleMenuClose(); 
-                    navigate(getHashPath('/settings')); 
+                    navigate(getHashPath('/app/settings')); 
                   }}>
                     <ListItemIcon>
                       <SettingsIcon fontSize="small" />

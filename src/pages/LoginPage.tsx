@@ -51,7 +51,7 @@ const LoginPage: React.FC = () => {
       
       await login(email, password);
       
-      // If there's a redirect parameter, go there
+      // After successful login, redirect appropriately
       if (redirectParam) {
         navigate(`/app/${redirectParam}`);
       } else if (locationState?.redirectAfterLogin) {

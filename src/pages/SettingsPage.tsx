@@ -106,7 +106,7 @@ const SettingsPage: React.FC = () => {
 
   // Update navigate('/connect-gsc') to use hash path
   const handleConnectGSC = () => {
-    navigate(getHashPath('/connect-gsc'));
+    navigate(getHashPath('/app/connect-gsc'));
   };
 
   const handleRefresh = async () => {
