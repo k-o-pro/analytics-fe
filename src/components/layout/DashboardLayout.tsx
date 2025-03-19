@@ -113,11 +113,6 @@ const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children })
     navigate(-1);
   };
 
-  const handleDrawerItemClick = (newValue: string) => {
-    setMobileOpen(false);
-    navigate(getHashPath(newValue));
-  };
-
   const menuItems = [
     { path: '/dashboard', icon: <DashboardIcon />, text: 'Dashboard', label: 'View your analytics dashboard' },
     { path: '/top-pages', icon: <ArticleIcon />, text: 'Top Pages', label: 'View your top performing pages' },
@@ -290,7 +285,7 @@ const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children })
         <BottomNavigation
           value={location.pathname}
           onChange={(_, newValue) => {
-            navigate(newValue);
+            navigate(getHashPath(newValue));
           }}
           showLabels
         >

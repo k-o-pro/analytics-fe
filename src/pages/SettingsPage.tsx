@@ -92,8 +92,21 @@ const SettingsPage: React.FC = () => {
     fetchProperties();
   }, [location, navigate, fetchProperties]);
 
+  // Add getHashPath helper
+  const getHashPath = (path: string) => {
+    // If path already starts with a hash, return it as is
+    if (path.startsWith('#')) return path;
+    
+    // If path starts with a slash, add the hash before it
+    if (path.startsWith('/')) return `#${path}`;
+    
+    // Otherwise, add hash and slash
+    return `#/${path}`;
+  };
+
+  // Update navigate('/connect-gsc') to use hash path
   const handleConnectGSC = () => {
-    navigate('/connect-gsc');
+    navigate(getHashPath('/connect-gsc'));
   };
 
   const handleRefresh = async () => {
