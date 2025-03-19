@@ -100,10 +100,13 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
           
           // Or check if it has a direct date property
           const validDate = item.date && !isNaN(new Date(item.date).getTime());
-          const hasMetrics = metrics.some(metric => 
-            typeof item[metric] === 'number' || 
-            (typeof item[metric] === 'string' && !isNaN(parseFloat(item[metric] as string)))
-          );
+          const hasMetrics = metrics.some(metric => {
+            const value = item[metric];
+            return (
+              typeof value === 'number' || 
+              (typeof value === 'string' && !isNaN(parseFloat(value)))
+            );
+          });
           
           if (validDate && hasMetrics) {
             console.debug('Valid item with date and metrics:', item);
@@ -132,12 +135,15 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
           // Format date consistently
           date: format(new Date(dateValue), 'yyyy-MM-dd'),
           // Ensure all metrics are numbers
-          ...metrics.reduce((acc, metric) => ({
-            ...acc,
-            [metric]: typeof item[metric] === 'number' 
-              ? item[metric] 
-              : (typeof item[metric] === 'string' ? parseFloat(item[metric] as string) : 0)
-          }), {})
+          ...metrics.reduce((acc, metric) => {
+            const value = item[metric];
+            return {
+              ...acc,
+              [metric]: typeof value === 'number' 
+                ? value 
+                : (typeof value === 'string' ? parseFloat(value) : 0)
+            };
+          }, {})
         };
         
         console.debug('Formatted item:', formattedItem);

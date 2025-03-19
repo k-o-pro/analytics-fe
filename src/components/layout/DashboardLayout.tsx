@@ -285,7 +285,10 @@ const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children })
         <BottomNavigation
           value={location.pathname}
           onChange={(_, newValue) => {
-            navigate(getHashPath(newValue));
+            // Make sure newValue is a string
+            if (typeof newValue === 'string') {
+              navigate(getHashPath(newValue));
+            }
           }}
           showLabels
         >
