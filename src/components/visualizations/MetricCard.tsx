@@ -1,10 +1,11 @@
 import React from 'react';
-import { Box, Paper, Typography, Tooltip, Skeleton } from '@mui/material';
+import { Box, Paper, Typography, Tooltip, Skeleton, Divider, Chip } from '@mui/material';
 import { 
   TrendingUp, 
   TrendingDown, 
   TrendingFlat,
-  Info as InfoIcon
+  Info as InfoIcon,
+  CompareArrows as CompareIcon
 } from '@mui/icons-material';
 
 export type MetricType = 'clicks' | 'impressions' | 'ctr' | 'position';
@@ -17,6 +18,7 @@ type MetricCardProps = {
   tooltipText?: string;
   isLoading?: boolean;
   metricType?: MetricType;
+  comparisonEnabled?: boolean;
 };
 
 const MetricCard: React.FC<MetricCardProps> = ({
@@ -26,7 +28,8 @@ const MetricCard: React.FC<MetricCardProps> = ({
   format = 'number',
   tooltipText,
   isLoading = false,
-  metricType = 'clicks'
+  metricType = 'clicks',
+  comparisonEnabled = false
 }) => {
   const formatValue = (val: number | string): string => {
     if (typeof val === 'string') return val;
@@ -49,10 +52,10 @@ const MetricCard: React.FC<MetricCardProps> = ({
     
     // For position metrics, lower is better
     if (format === 'position') {
-      return ((previousValue - value) / previousValue) * 100;
+      return previousValue === 0 ? 0 : ((previousValue - value) / previousValue) * 100;
     }
     
-    return ((value - previousValue) / previousValue) * 100;
+    return previousValue === 0 ? 0 : ((value - previousValue) / previousValue) * 100;
   };
 
   const delta = calculateDelta();
@@ -100,6 +103,20 @@ const MetricCard: React.FC<MetricCardProps> = ({
     }
     
     return formatValue(numericValue);
+  };
+
+  const renderPreviousValue = () => {
+    if (isLoading || !comparisonEnabled || previousValue === undefined) {
+      return <Skeleton variant="text" width="50%" height={20} animation="wave" />;
+    }
+    
+    const numericPrevValue = typeof previousValue === 'string' ? parseFloat(previousValue) : previousValue;
+    
+    if (isNaN(numericPrevValue)) {
+      return '—';
+    }
+    
+    return formatValue(numericPrevValue);
   };
 
   // Delta color: green for positive change, red for negative, grey for neutral
@@ -191,7 +208,59 @@ const MetricCard: React.FC<MetricCardProps> = ({
         {renderValue()}
       </Typography>
       
-      {previousValue !== undefined && (
+      {(previousValue !== undefined && comparisonEnabled) && (
+        <>
+          <Divider sx={{ my: 1.5 }} />
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <CompareIcon fontSize="small" color="action" />
+            <Typography 
+              variant="caption" 
+              color="text.secondary"
+              sx={{ fontWeight: 500 }}
+            >
+              Previous Period
+            </Typography>
+          </Box>
+          
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between',
+              alignItems: 'center', 
+              mt: 0.5,
+            }}
+          >
+            <Typography variant="body2">
+              {renderPreviousValue()}
+            </Typography>
+            
+            {!isLoading && (
+              <Chip
+                icon={renderDeltaIcon()}
+                label={isNeutral 
+                  ? 'No change' 
+                  : `${isPositive ? '+' : ''}${delta.toFixed(1)}%`
+                }
+                size="small"
+                sx={{ 
+                  fontWeight: 500,
+                  bgcolor: isNeutral ? 'grey.100' : (
+                    (isPositive && format !== 'position') || (!isPositive && format === 'position')
+                    ? 'success.50' : 'error.50'
+                  ),
+                  color: getDeltaColor(),
+                  '& .MuiChip-icon': {
+                    color: 'inherit'
+                  }
+                }}
+              />
+            )}
+          </Box>
+        </>
+      )}
+      
+      {(previousValue !== undefined && !comparisonEnabled) && (
         <Box 
           sx={{ 
             display: 'flex', 

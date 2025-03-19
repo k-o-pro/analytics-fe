@@ -8,24 +8,31 @@ import {
   TextField,
   Typography,
   Stack,
-  Divider 
+  Divider,
+  FormControlLabel,
+  Switch,
+  Chip 
 } from '@mui/material';
-import { DatePicker } from '@mui/lab';
-import { TextFieldProps } from '@mui/material';
-import { CalendarToday as CalendarIcon } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers';
+import { 
+  CalendarToday as CalendarIcon,
+  CompareArrows as CompareIcon
+} from '@mui/icons-material';
 import { format, isValid, isAfter, parseISO } from 'date-fns';
-import { DateRange } from '../../services/gscService';
+import { DateRange } from '../../types/api';
 
 interface DateRangePickerProps {
   selectedRange: DateRange;
   predefinedRanges: DateRange[];
-  onRangeChange: (range: DateRange) => void;
+  onRangeChange: (range: DateRange, enableComparison?: boolean) => void;
+  comparisonEnabled?: boolean;
 }
 
 const DateRangePicker: React.FC<DateRangePickerProps> = ({
   selectedRange,
   predefinedRanges,
   onRangeChange,
+  comparisonEnabled = false
 }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(
@@ -35,6 +42,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
     selectedRange.endDate ? parseISO(selectedRange.endDate) : null
   );
   const [error, setError] = useState<string | null>(null);
+  const [showComparison, setShowComparison] = useState<boolean>(comparisonEnabled);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -42,6 +50,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
     setStartDate(selectedRange.startDate ? parseISO(selectedRange.startDate) : null);
     setEndDate(selectedRange.endDate ? parseISO(selectedRange.endDate) : null);
     setError(null);
+    setShowComparison(comparisonEnabled);
   };
 
   const handleClose = () => {
@@ -49,7 +58,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   };
 
   const handlePredefinedRangeClick = (range: DateRange) => {
-    onRangeChange(range);
+    onRangeChange(range, showComparison);
     handleClose();
   };
 
@@ -85,12 +94,25 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
       startDate: formattedStartDate,
       endDate: formattedEndDate,
       label: `${format(startDate, 'MMM d, yyyy')} - ${format(endDate, 'MMM d, yyyy')}`,
-    });
+    }, showComparison);
 
     handleClose();
   };
 
+  const toggleComparison = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setShowComparison(event.target.checked);
+  };
+
   const open = Boolean(anchorEl);
+
+  // Format display text for the button
+  const getDisplayText = () => {
+    let text = selectedRange.label || '';
+    if (comparisonEnabled) {
+      text += ' (vs previous)';
+    }
+    return text;
+  };
 
   return (
     <Box>
@@ -98,9 +120,10 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
         variant="outlined"
         onClick={handleClick}
         startIcon={<CalendarIcon />}
+        endIcon={comparisonEnabled && <CompareIcon color="primary" />}
         size="small"
       >
-        {selectedRange.label}
+        {getDisplayText()}
       </Button>
 
       <Popover
@@ -131,7 +154,11 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
               <Button
                 key={range.label}
                 onClick={() => handlePredefinedRangeClick(range)}
-                sx={{ justifyContent: 'flex-start', py: 1 }}
+                sx={{ 
+                  justifyContent: 'flex-start', 
+                  py: 1,
+                  bgcolor: selectedRange.label === range.label ? 'action.selected' : 'transparent'
+                }}
               >
                 {range.label}
               </Button>
@@ -145,28 +172,53 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
           </Divider>
 
           <Stack spacing={2}>
-          <DatePicker
-            label="Start Date"
-            value={startDate}
-            onChange={(newValue: Date) => {
-              setStartDate(newValue);
-              setError(null);
-            }}
-            renderInput={(params: TextFieldProps) => <TextField size="small" {...params} fullWidth />}
-            maxDate={endDate || undefined}
-          />
+            <DatePicker
+              label="Start Date"
+              value={startDate}
+              onChange={(newValue: Date | null) => {
+                setStartDate(newValue);
+                setError(null);
+              }}
+              maxDate={endDate || undefined}
+              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            />
 
-          <DatePicker
-            label="End Date"
-            value={endDate}
-            onChange={(newValue: Date) => {
-              setEndDate(newValue);
-              setError(null);
-            }}
-            renderInput={(params: TextFieldProps) => <TextField size="small" {...params} fullWidth />}
-            minDate={startDate || undefined}
-            maxDate={new Date()}
-          />
+            <DatePicker
+              label="End Date"
+              value={endDate}
+              onChange={(newValue: Date | null) => {
+                setEndDate(newValue);
+                setError(null);
+              }}
+              minDate={startDate || undefined}
+              maxDate={new Date()}
+              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            />
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showComparison}
+                  onChange={toggleComparison}
+                  name="compare"
+                  color="primary"
+                />
+              }
+              label={
+                <Typography variant="body2">
+                  Compare to previous period
+                </Typography>
+              }
+            />
+
+            {showComparison && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CompareIcon fontSize="small" color="action" />
+                <Typography variant="caption" color="text.secondary">
+                  Will compare against the same length period immediately before your selection
+                </Typography>
+              </Box>
+            )}
 
             {error && (
               <Typography color="error" variant="body2">

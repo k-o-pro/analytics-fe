@@ -93,6 +93,7 @@ const DashboardPage: React.FC = () => {
     ctr: 0,
     position: 0
   });
+  const [enableComparison, setEnableComparison] = useState<boolean>(false);
 
   const getHashPath = (path: string) => {
     // If path already starts with a hash, return it as is
@@ -115,7 +116,8 @@ const DashboardPage: React.FC = () => {
       // Log the property and date range we're using
       console.log('Fetching performance data for:', {
         property: selectedProperty.siteUrl,
-        dateRange: selectedRange
+        dateRange: selectedRange,
+        comparison: enableComparison ? 'enabled' : 'disabled'
       });
       
       // Make the API request to fetch GSC metrics
@@ -174,31 +176,41 @@ const DashboardPage: React.FC = () => {
         // If we successfully got data, clear any previous error
         setError(null);
         
-        // Calculate previous period metrics for comparison
-        const prevPeriod = gscService.getPreviousPeriod(
-          selectedRange.startDate,
-          selectedRange.endDate
-        );
-        
-        try {
-          const prevResponse = await gscService.fetchMetrics({
-            siteUrl: selectedProperty.siteUrl,
-            startDate: prevPeriod.startDate,
-            endDate: prevPeriod.endDate
-          });
+        // Calculate previous period metrics for comparison only if enabled
+        if (enableComparison) {
+          const prevPeriod = gscService.getPreviousPeriod(
+            selectedRange.startDate,
+            selectedRange.endDate
+          );
           
-          // Extract rows from the correct location in the response (same as above)
-          const prevRows = Array.isArray(prevResponse.rows) 
-            ? prevResponse.rows 
-            : (prevResponse.data && Array.isArray(prevResponse.data.rows) 
-                ? prevResponse.data.rows 
-                : []);
-          
-          const prevMetrics = calculateSummaryMetrics(prevRows);
-          setPreviousSummaryMetrics(prevMetrics);
-        } catch (prevPeriodError) {
-          console.warn('Failed to load previous period data:', prevPeriodError);
-          // Not setting an error here as the main data loaded successfully
+          try {
+            const prevResponse = await gscService.fetchMetrics({
+              siteUrl: selectedProperty.siteUrl,
+              startDate: prevPeriod.startDate,
+              endDate: prevPeriod.endDate
+            });
+            
+            // Extract rows from the correct location in the response (same as above)
+            const prevRows = Array.isArray(prevResponse.rows) 
+              ? prevResponse.rows 
+              : (prevResponse.data && Array.isArray(prevResponse.data.rows) 
+                  ? prevResponse.data.rows 
+                  : []);
+            
+            const prevMetrics = calculateSummaryMetrics(prevRows);
+            setPreviousSummaryMetrics(prevMetrics);
+          } catch (prevPeriodError) {
+            console.warn('Failed to load previous period data:', prevPeriodError);
+            // Not setting an error here as the main data loaded successfully
+            setPreviousSummaryMetrics({
+              clicks: 0,
+              impressions: 0,
+              ctr: 0,
+              position: 0
+            });
+          }
+        } else {
+          // If comparison is disabled, reset previous period metrics
           setPreviousSummaryMetrics({
             clicks: 0,
             impressions: 0,
@@ -265,7 +277,7 @@ const DashboardPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedProperty, selectedRange]);
+  }, [selectedProperty, selectedRange, enableComparison]);
 
   // Initialize date ranges
   useEffect(() => {
@@ -307,8 +319,9 @@ const DashboardPage: React.FC = () => {
     setError(null);
   };
 
-  const handleDateRangeChange = (range: DateRange) => {
+  const handleDateRangeChange = (range: DateRange, compareWithPrevious?: boolean) => {
     setSelectedRange(range);
+    setEnableComparison(!!compareWithPrevious);
   };
 
   const handleConnectGSC = () => {
@@ -380,6 +393,7 @@ const DashboardPage: React.FC = () => {
               selectedRange={selectedRange}
               predefinedRanges={dateRanges}
               onRangeChange={handleDateRangeChange}
+              comparisonEnabled={enableComparison}
             />
           )}
         </Box>
@@ -412,6 +426,8 @@ const DashboardPage: React.FC = () => {
                 previousValue={previousSummaryMetrics.clicks}
                 isLoading={loading}
                 tooltipText="Total number of clicks from Google Search results"
+                metricType="clicks"
+                comparisonEnabled={enableComparison}
               />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -421,6 +437,8 @@ const DashboardPage: React.FC = () => {
                 previousValue={previousSummaryMetrics.impressions}
                 isLoading={loading}
                 tooltipText="Number of times your site appeared in search results"
+                metricType="impressions"
+                comparisonEnabled={enableComparison}
               />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -431,6 +449,8 @@ const DashboardPage: React.FC = () => {
                 format="percent"
                 isLoading={loading}
                 tooltipText="Click-through rate (clicks divided by impressions)"
+                metricType="ctr"
+                comparisonEnabled={enableComparison}
               />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -441,6 +461,8 @@ const DashboardPage: React.FC = () => {
                 format="position"
                 isLoading={loading}
                 tooltipText="Average position in search results (lower is better)"
+                metricType="position"
+                comparisonEnabled={enableComparison}
               />
             </Grid>
           </Grid>
