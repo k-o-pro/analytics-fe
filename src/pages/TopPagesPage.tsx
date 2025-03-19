@@ -162,7 +162,9 @@ const TopPagesPage: React.FC = () => {
   };
 
   const handleViewInsights = (url: string) => {
-    navigate(`/app/insights?url=${encodeURIComponent(url)}`);
+    // Make sure the URL is properly encoded to avoid issues with special characters
+    const encodedUrl = encodeURIComponent(url);
+    navigate(`/app/insights?url=${encodedUrl}`);
   };
 
   // Helper function to render delta change indicators

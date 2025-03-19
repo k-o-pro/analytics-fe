@@ -17,7 +17,16 @@ import {
   ListItemText,
   Tooltip,
   useTheme,
-  Chip
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material';
 import {
   TrendingUp,
@@ -29,7 +38,10 @@ import {
   ArrowForward,
   ArrowDownward,
   CheckCircle as CheckCircleIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  ExpandMore as ExpandMoreIcon,
+  EmojiObjects as OpportunityIcon,
+  Keyboard as KeywordIcon
 } from '@mui/icons-material';
 
 import PropertySelector from '../components/dashboard/PropertySelector';
@@ -121,33 +133,53 @@ const InsightsPage: React.FC = () => {
         return;
       }
 
-      console.log('Generating insights for property:', selectedProperty.siteUrl);
+      console.log(`Generating ${targetPageUrl ? 'page' : 'site'} insights for property:`, selectedProperty.siteUrl);
       
       try {
-        const response = await insightsService.generateInsights({
-          siteUrl: selectedProperty.siteUrl,
-          period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
-          data: {
-            // Include basic data to help OpenAI generate insights
-            property: selectedProperty.siteUrl, // GSCProperty only has siteUrl, not name
-            targetPageUrl: targetPageUrl || null,
-            dateRange: {
-              start: selectedRange.startDate,
-              end: selectedRange.endDate,
-              label: selectedRange.label
+        let response;
+
+        // If we have a targetPageUrl, use generatePageInsights instead of generateInsights
+        if (targetPageUrl) {
+          console.log('Generating insights for specific page:', targetPageUrl);
+          
+          response = await insightsService.generatePageInsights({
+            siteUrl: selectedProperty.siteUrl,
+            pageUrl: targetPageUrl,
+            period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
+            data: {
+              property: selectedProperty.siteUrl,
+              dateRange: {
+                start: selectedRange.startDate,
+                end: selectedRange.endDate,
+                label: selectedRange.label
+              }
             }
-          }
-        });
+          });
+        } else {
+          // Generate site-wide insights
+          response = await insightsService.generateInsights({
+            siteUrl: selectedProperty.siteUrl,
+            period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
+            data: {
+              property: selectedProperty.siteUrl,
+              dateRange: {
+                start: selectedRange.startDate,
+                end: selectedRange.endDate,
+                label: selectedRange.label
+              }
+            }
+          });
+        }
         
         setInsights(response);
         setCredits(prev => Math.max(0, prev - 1));
       } catch (apiError: any) {
-        console.error('API Error generating insights:', apiError);
+        console.error(`API Error generating ${targetPageUrl ? 'page' : 'site'} insights:`, apiError);
         
         // Try to use mock data with a different API call
         try {
           console.log('Attempting to use mock data as fallback...');
-          const mockResponse = await insightsService.generateInsights({
+          const mockRequest = {
             siteUrl: selectedProperty.siteUrl,
             period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
             data: {
@@ -160,7 +192,14 @@ const InsightsPage: React.FC = () => {
               },
               useMock: true // Signal to use mock data
             }
-          });
+          };
+
+          const mockResponse = targetPageUrl
+            ? await insightsService.generatePageInsights({
+                ...mockRequest,
+                pageUrl: targetPageUrl
+              })
+            : await insightsService.generateInsights(mockRequest);
           
           // If we got mock data, use it but show a warning
           setInsights(mockResponse);
@@ -186,7 +225,7 @@ const InsightsPage: React.FC = () => {
         
         // Create a fallback insights object so the UI doesn't break
         setInsights({
-          summary: "Unable to generate insights at this time",
+          summary: `Unable to generate ${targetPageUrl ? 'page' : 'site'} insights at this time`,
           performance: {
             trend: "stable",
             details: "We encountered an error while generating your insights."
@@ -219,14 +258,74 @@ const InsightsPage: React.FC = () => {
     handleGenerateInsights();
   };
 
-  const renderTrendIcon = (trend: 'up' | 'down' | 'stable') => {
+  const renderTrendIcon = (trend: 'up' | 'down' | 'stable' | 'mixed') => {
     switch (trend) {
       case 'up':
         return <TrendingUp sx={{ color: theme.palette.success.main }} />;
       case 'down':
         return <TrendingDown sx={{ color: theme.palette.error.main }} />;
+      case 'mixed':
+        return <TrendingFlat sx={{ color: theme.palette.warning.main }} />;
       default:
         return <TrendingFlat sx={{ color: theme.palette.text.secondary }} />;
+    }
+  };
+
+  const renderImpactLevelIcon = (impactLevel: 'high' | 'medium' | 'low' | undefined) => {
+    if (!impactLevel) return null;
+    
+    switch (impactLevel) {
+      case 'high':
+        return <Chip 
+          label="High Impact" 
+          size="small" 
+          color="error"
+          sx={{ ml: 1, height: 20 }}
+        />;
+      case 'medium':
+        return <Chip 
+          label="Medium Impact" 
+          size="small" 
+          color="warning"
+          sx={{ ml: 1, height: 20 }}
+        />;
+      case 'low':
+        return <Chip 
+          label="Low Impact" 
+          size="small" 
+          color="success"
+          sx={{ ml: 1, height: 20 }}
+        />;
+      default:
+        return null;
+    }
+  };
+
+  const renderDifficultyChip = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy':
+        return <Chip 
+          label="Easy" 
+          size="small" 
+          color="success"
+          sx={{ ml: 1, height: 20 }}
+        />;
+      case 'moderate':
+        return <Chip 
+          label="Moderate" 
+          size="small" 
+          color="warning"
+          sx={{ ml: 1, height: 20 }}
+        />;
+      case 'complex':
+        return <Chip 
+          label="Complex" 
+          size="small" 
+          color="error"
+          sx={{ ml: 1, height: 20 }}
+        />;
+      default:
+        return null;
     }
   };
 
@@ -346,7 +445,7 @@ const InsightsPage: React.FC = () => {
           </Typography>
           
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={6} md={3}>
               <List dense>
                 <ListItem>
                   <ListItemIcon>
@@ -368,7 +467,7 @@ const InsightsPage: React.FC = () => {
                 </ListItem>
               </List>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={6} md={3}>
               <List dense>
                 <ListItem>
                   <ListItemIcon>
@@ -376,7 +475,7 @@ const InsightsPage: React.FC = () => {
                   </ListItemIcon>
                   <ListItemText 
                     primary="Key Findings" 
-                    secondary="Notable observations about your performance" 
+                    secondary="Notable observations with impact levels" 
                   />
                 </ListItem>
                 <ListItem>
@@ -384,8 +483,52 @@ const InsightsPage: React.FC = () => {
                     <CheckCircleIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText 
+                    primary="Opportunities" 
+                    secondary="Actionable improvements with difficulty ratings" 
+                  />
+                </ListItem>
+              </List>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <List dense>
+                <ListItem>
+                  <ListItemIcon>
+                    <CheckCircleIcon color="primary" />
+                  </ListItemIcon>
+                  <ListItemText 
                     primary="Actionable Recommendations" 
-                    secondary="Prioritized steps to improve your performance" 
+                    secondary="Prioritized steps with implementation details" 
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon>
+                    <CheckCircleIcon color="primary" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Expected Outcomes" 
+                    secondary="Projected results for each recommendation" 
+                  />
+                </ListItem>
+              </List>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <List dense>
+                <ListItem>
+                  <ListItemIcon>
+                    <CheckCircleIcon color="primary" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Keyword Insights" 
+                    secondary="Rising and declining search terms" 
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon>
+                    <CheckCircleIcon color="primary" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Missed Opportunities" 
+                    secondary="Keywords with potential for improvement" 
                   />
                 </ListItem>
               </List>
@@ -414,20 +557,73 @@ const InsightsPage: React.FC = () => {
                 <Chip 
                   icon={renderTrendIcon(insights.performance.trend)} 
                   label={`Trend: ${insights.performance.trend.charAt(0).toUpperCase() + insights.performance.trend.slice(1)}`} 
-                  color={insights.performance.trend === 'up' ? 'success' : insights.performance.trend === 'down' ? 'error' : 'default'}
+                  color={
+                    insights.performance.trend === 'up' ? 'success' : 
+                    insights.performance.trend === 'down' ? 'error' : 
+                    insights.performance.trend === 'mixed' ? 'warning' : 'default'
+                  }
                   variant="outlined"
                   size="small"
                   sx={{ ml: 2 }}
                 />
+              )}
+              {insights.performance && insights.performance.changePercent && (
+                <Chip 
+                  label={`Change: ${insights.performance.changePercent}`}
+                  variant="outlined"
+                  size="small"
+                  sx={{ ml: 1 }}
+                />
+              )}
+              {insights.performance && insights.performance.timePeriod && (
+                <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
+                  {insights.performance.timePeriod}
+                </Typography>
               )}
             </Box>
             <Typography variant="body1" paragraph>
               {insights.summary}
             </Typography>
             {insights.performance && (
-              <Typography variant="body2" color="text.secondary">
-                {insights.performance.details}
-              </Typography>
+              <>
+                {insights.performance.keyMetricChanges && insights.performance.keyMetricChanges.length > 0 && (
+                  <TableContainer component={Paper} variant="outlined" sx={{ mb: 2 }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Metric</TableCell>
+                          <TableCell align="right">Change</TableCell>
+                          <TableCell>Interpretation</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {insights.performance.keyMetricChanges.map((metric, i) => (
+                          <TableRow key={i}>
+                            <TableCell component="th" scope="row">
+                              {metric.metric.charAt(0).toUpperCase() + metric.metric.slice(1)}
+                            </TableCell>
+                            <TableCell align="right">
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                                {metric.change.startsWith('+') ? 
+                                  <TrendingUp fontSize="small" color="success" sx={{ mr: 0.5 }} /> :
+                                  metric.change.startsWith('-') ?
+                                  <TrendingDown fontSize="small" color="error" sx={{ mr: 0.5 }} /> :
+                                  <TrendingFlat fontSize="small" color="disabled" sx={{ mr: 0.5 }} />
+                                }
+                                {metric.change}
+                              </Box>
+                            </TableCell>
+                            <TableCell>{metric.interpretation}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
+                <Typography variant="body2" color="text.secondary">
+                  {insights.performance.details}
+                </Typography>
+              </>
             )}
           </Paper>
           
@@ -445,13 +641,33 @@ const InsightsPage: React.FC = () => {
                         <CardContent sx={{ pb: 2, '&:last-child': { pb: 2 } }}>
                           <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
                             <InfoIcon color="primary" sx={{ mr: 1.5, mt: 0.3 }} />
-                            <Box>
-                              <Typography variant="subtitle1" component="div">
-                                {finding.title}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary">
+                            <Box sx={{ width: '100%' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                                <Typography variant="subtitle1" component="div">
+                                  {finding.title}
+                                </Typography>
+                                {renderImpactLevelIcon(finding.impactLevel)}
+                              </Box>
+                              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
                                 {finding.description}
                               </Typography>
+                              {finding.dataPoints && finding.dataPoints.length > 0 && (
+                                <Box sx={{ mt: 1, bgcolor: 'background.default', p: 1, borderRadius: 1 }}>
+                                  <Typography variant="caption" component="div" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                                    Supporting Data:
+                                  </Typography>
+                                  <List dense disablePadding>
+                                    {finding.dataPoints.map((point, i) => (
+                                      <ListItem key={i} sx={{ py: 0.25 }}>
+                                        <ListItemIcon sx={{ minWidth: 24 }}>
+                                          <ArrowForward fontSize="small" color="disabled" />
+                                        </ListItemIcon>
+                                        <ListItemText primary={<Typography variant="caption">{point}</Typography>} />
+                                      </ListItem>
+                                    ))}
+                                  </List>
+                                </Box>
+                              )}
                             </Box>
                           </Box>
                         </CardContent>
@@ -477,8 +693,8 @@ const InsightsPage: React.FC = () => {
                             <Box sx={{ mr: 1.5, mt: 0.3 }}>
                               {renderPriorityIcon(recommendation.priority)}
                             </Box>
-                            <Box>
-                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Box sx={{ width: '100%' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
                                 <Typography variant="subtitle1" component="div">
                                   {recommendation.title}
                                 </Typography>
@@ -495,9 +711,53 @@ const InsightsPage: React.FC = () => {
                                   sx={{ ml: 1, height: 20 }}
                                 />
                               </Box>
-                              <Typography variant="body2" color="text.secondary">
+                              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                                 {recommendation.description}
                               </Typography>
+                              
+                              {(recommendation.expectedOutcome || recommendation.implementationSteps) && (
+                                <Accordion 
+                                  disableGutters 
+                                  elevation={0} 
+                                  sx={{ 
+                                    mt: 1,
+                                    '&:before': { display: 'none' },
+                                    bgcolor: 'background.default',
+                                  }}
+                                >
+                                  <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                    sx={{ minHeight: '36px', p: 0 }}
+                                  >
+                                    <Typography variant="caption" sx={{ fontWeight: 'bold' }}>Implementation Details</Typography>
+                                  </AccordionSummary>
+                                  <AccordionDetails sx={{ px: 1, py: 0 }}>
+                                    {recommendation.expectedOutcome && (
+                                      <Typography variant="caption" component="div" sx={{ mb: 1 }}>
+                                        <strong>Expected Outcome:</strong> {recommendation.expectedOutcome}
+                                      </Typography>
+                                    )}
+                                    
+                                    {recommendation.implementationSteps && recommendation.implementationSteps.length > 0 && (
+                                      <>
+                                        <Typography variant="caption" component="div" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                                          Implementation Steps:
+                                        </Typography>
+                                        <List dense disablePadding>
+                                          {recommendation.implementationSteps.map((step, i) => (
+                                            <ListItem key={i} sx={{ py: 0.25 }}>
+                                              <ListItemIcon sx={{ minWidth: 24 }}>
+                                                <CheckCircleIcon fontSize="small" color="primary" />
+                                              </ListItemIcon>
+                                              <ListItemText primary={<Typography variant="caption">{step}</Typography>} />
+                                            </ListItem>
+                                          ))}
+                                        </List>
+                                      </>
+                                    )}
+                                  </AccordionDetails>
+                                </Accordion>
+                              )}
                             </Box>
                           </Box>
                         </CardContent>
@@ -507,6 +767,153 @@ const InsightsPage: React.FC = () => {
                 </List>
               </Paper>
             </Grid>
+            
+            {insights.opportunities && insights.opportunities.length > 0 && (
+              <Grid item xs={12}>
+                <Paper sx={{ p: 3 }}>
+                  <Typography variant="h6" component="h3" gutterBottom>
+                    Opportunities
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                  <Grid container spacing={2}>
+                    {insights.opportunities.map((opportunity, index) => (
+                      <Grid item xs={12} md={4} key={index}>
+                        <Card variant="outlined" sx={{ height: '100%' }}>
+                          <CardContent>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                              <OpportunityIcon color="primary" sx={{ mr: 1.5, mt: 0.3 }} />
+                              <Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                                  <Typography variant="subtitle1" component="div">
+                                    {opportunity.title}
+                                  </Typography>
+                                  {renderDifficultyChip(opportunity.difficulty)}
+                                </Box>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
+                                  {opportunity.description}
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
+                                  <Typography variant="caption" component="div">
+                                    <strong>Estimated Impact:</strong> {opportunity.estimatedImpact}
+                                  </Typography>
+                                  <Typography variant="caption" component="div">
+                                    <strong>Time Frame:</strong> {opportunity.timeFrame}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Paper>
+              </Grid>
+            )}
+            
+            {insights.keywordInsights && (
+              <Grid item xs={12}>
+                <Paper sx={{ p: 3 }}>
+                  <Typography variant="h6" component="h3" gutterBottom>
+                    Keyword Insights
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                  
+                  <Typography variant="body2" paragraph>
+                    {insights.keywordInsights.analysis}
+                  </Typography>
+                  
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={4}>
+                      <Card variant="outlined">
+                        <CardContent>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                            <KeywordIcon color="success" sx={{ mr: 1 }} />
+                            <Typography variant="subtitle1">
+                              Rising Keywords
+                            </Typography>
+                          </Box>
+                          {insights.keywordInsights.risingKeywords.length > 0 ? (
+                            <List dense disablePadding>
+                              {insights.keywordInsights.risingKeywords.map((keyword, i) => (
+                                <ListItem key={i} sx={{ py: 0.5 }}>
+                                  <ListItemIcon sx={{ minWidth: 28 }}>
+                                    <TrendingUp fontSize="small" color="success" />
+                                  </ListItemIcon>
+                                  <ListItemText primary={keyword} />
+                                </ListItem>
+                              ))}
+                            </List>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              No rising keywords identified.
+                            </Typography>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                    
+                    <Grid item xs={12} md={4}>
+                      <Card variant="outlined">
+                        <CardContent>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                            <KeywordIcon color="error" sx={{ mr: 1 }} />
+                            <Typography variant="subtitle1">
+                              Declining Keywords
+                            </Typography>
+                          </Box>
+                          {insights.keywordInsights.decliningKeywords.length > 0 ? (
+                            <List dense disablePadding>
+                              {insights.keywordInsights.decliningKeywords.map((keyword, i) => (
+                                <ListItem key={i} sx={{ py: 0.5 }}>
+                                  <ListItemIcon sx={{ minWidth: 28 }}>
+                                    <TrendingDown fontSize="small" color="error" />
+                                  </ListItemIcon>
+                                  <ListItemText primary={keyword} />
+                                </ListItem>
+                              ))}
+                            </List>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              No declining keywords identified.
+                            </Typography>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                    
+                    <Grid item xs={12} md={4}>
+                      <Card variant="outlined">
+                        <CardContent>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                            <KeywordIcon color="warning" sx={{ mr: 1 }} />
+                            <Typography variant="subtitle1">
+                              Missed Opportunities
+                            </Typography>
+                          </Box>
+                          {insights.keywordInsights.missedOpportunities.length > 0 ? (
+                            <List dense disablePadding>
+                              {insights.keywordInsights.missedOpportunities.map((keyword, i) => (
+                                <ListItem key={i} sx={{ py: 0.5 }}>
+                                  <ListItemIcon sx={{ minWidth: 28 }}>
+                                    <LightbulbIcon fontSize="small" color="warning" />
+                                  </ListItemIcon>
+                                  <ListItemText primary={keyword} />
+                                </ListItem>
+                              ))}
+                            </List>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              No missed opportunities identified.
+                            </Typography>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  </Grid>
+                </Paper>
+              </Grid>
+            )}
           </Grid>
         </Box>
       )}

@@ -6,19 +6,49 @@ export type InsightRequest = {
   data: any;
 };
 
-export type Recommendation = {
-  title: string;
-  description: string;
-  priority: 'high' | 'medium' | 'low';
+export type KeyMetricChange = {
+  metric: string;
+  change: string;
+  interpretation: string;
 };
+
+export type DataPoint = string;
 
 export type Finding = {
   title: string;
   description: string;
+  impactLevel?: 'high' | 'medium' | 'low';
+  dataPoints?: DataPoint[];
+};
+
+export type Opportunity = {
+  title: string;
+  description: string;
+  estimatedImpact: string;
+  difficulty: 'easy' | 'moderate' | 'complex';
+  timeFrame: 'immediate' | 'short-term' | 'medium-term' | 'long-term';
+};
+
+export type Recommendation = {
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  expectedOutcome?: string;
+  implementationSteps?: string[];
+};
+
+export type KeywordInsights = {
+  risingKeywords: string[];
+  decliningKeywords: string[];
+  missedOpportunities: string[];
+  analysis: string;
 };
 
 export type Performance = {
-  trend: 'up' | 'down' | 'stable';
+  trend: 'up' | 'down' | 'stable' | 'mixed';
+  changePercent?: string;
+  timePeriod?: string;
+  keyMetricChanges?: KeyMetricChange[];
   details: string;
 };
 
@@ -26,7 +56,9 @@ export type InsightResponse = {
   summary: string;
   performance: Performance;
   topFindings: Finding[];
+  opportunities?: Opportunity[];
   recommendations: Recommendation[];
+  keywordInsights?: KeywordInsights;
 };
 
 export type PageInsightRequest = {
