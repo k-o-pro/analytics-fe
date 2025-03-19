@@ -18,6 +18,7 @@ import SettingsPage from './pages/SettingsPage';
 import ConnectGSCPage from './pages/ConnectGSCPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import NotFoundPage from './pages/NotFoundPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 
 function App() {
   const { isLoading } = useAuth();
@@ -45,6 +46,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             {/* Special route for OAuth callback - outside PrivateRoute to avoid redirect loops */}
             <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
             

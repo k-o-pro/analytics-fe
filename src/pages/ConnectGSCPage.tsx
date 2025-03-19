@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, Typography, Button, Paper, Container, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
-import { SsidChart, Visibility, QueryStats, AutoGraph, Check } from '@mui/icons-material';
+import { Box, Typography, Button, Paper, Container, Divider, List, ListItem, ListItemIcon, ListItemText, Link } from '@mui/material';
+import { SsidChart, Visibility, QueryStats, AutoGraph, Check, Security } from '@mui/icons-material';
 import { gscService } from '../services/gscService';
+import { Link as RouterLink } from 'react-router-dom';
 
 const ConnectGSCPage: React.FC = () => {
   const handleConnect = () => {
@@ -87,9 +88,21 @@ const ConnectGSCPage: React.FC = () => {
           </List>
           
           <Box sx={{ mt: 4, bgcolor: 'background.paper', p: 2, borderRadius: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
+              <Security color="primary" sx={{ mr: 1, fontSize: '1.2rem' }} />
+              <Typography variant="subtitle2" color="text.primary">
+                Data Security and Privacy
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary" paragraph>
+              Your data is secure and private. We only access your Search Console data with your explicit permission and in compliance with Google's API Services User Data Policy.
+            </Typography>
             <Typography variant="body2" color="text.secondary">
-              Your data is secure and private. We only access your Search Console data with your explicit permission.
-              You can disconnect at any time from the Settings page.
+              By connecting, you agree to our{' '}
+              <Link component={RouterLink} to="/privacy-policy" color="primary">
+                Privacy Policy
+              </Link>
+              . You can disconnect at any time from the Settings page.
             </Typography>
           </Box>
         </Paper>

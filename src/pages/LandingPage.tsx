@@ -12,7 +12,9 @@ import {
   Toolbar,
   Card,
   CardContent,
-  Divider
+  Divider,
+  Stack,
+  Link
 } from '@mui/material';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -750,15 +752,24 @@ const LandingPage: React.FC = () => {
               <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
                 Product
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Features
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Pricing
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                FAQ
-              </Typography>
+              <Stack spacing={1}>
+                <Link 
+                  href="/#/login" 
+                  underline="hover" 
+                  variant="body2" 
+                  color="text.secondary"
+                >
+                  Dashboard
+                </Link>
+                <Link 
+                  href="/#/privacy-policy"
+                  underline="hover" 
+                  variant="body2" 
+                  color="text.secondary"
+                >
+                  Privacy Policy
+                </Link>
+              </Stack>
             </Grid>
 
             <Grid item xs={6} md={2}>
