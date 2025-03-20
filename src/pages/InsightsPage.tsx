@@ -28,10 +28,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Tabs,
-  Tab,
-  Collapse,
-  TablePagination,
-  Stack
+  Tab
 } from '@mui/material';
 import {
   TrendingUp,
