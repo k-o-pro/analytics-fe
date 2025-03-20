@@ -146,10 +146,13 @@ const InsightsPage: React.FC = () => {
     
     setLoading(true);
     try {
+      // Convert null to undefined for targetPageUrl
+      const targetPageUrlParam = targetPageUrl === null ? undefined : targetPageUrl;
+      
       const insights = await insightsService.getInsights(
         selectedProperty.siteUrl,
         `${selectedRange.startDate} to ${selectedRange.endDate}`,
-        targetPageUrl,
+        targetPageUrlParam,
         true // refresh data
       );
       setInsights(insights);
