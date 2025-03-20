@@ -26,7 +26,12 @@ import {
   TableRow,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  Tabs,
+  Tab,
+  Collapse,
+  TablePagination,
+  Stack
 } from '@mui/material';
 import {
   TrendingUp,
@@ -41,14 +46,27 @@ import {
   Refresh as RefreshIcon,
   ExpandMore as ExpandMoreIcon,
   EmojiObjects as OpportunityIcon,
-  Keyboard as KeywordIcon
+  Keyboard as KeywordIcon,
+  BarChart as ChartIcon,
+  DataObject as RawDataIcon,
+  Insights as InsightsIcon,
+  Timeline as TimelineIcon
 } from '@mui/icons-material';
 
 import PropertySelector from '../components/dashboard/PropertySelector';
 import DateRangePicker from '../components/dashboard/DateRangePicker';
 import { gscService } from '../services/gscService';
 import { DateRange, GSCProperty } from '../types/api';
-import { insightsService, InsightResponse } from '../services/insightsService';
+import { 
+  insightsService, 
+  InsightResponse, 
+  TopItem, 
+  Performance, 
+  TopFinding, 
+  Recommendation, 
+  Opportunity,
+  KeywordInsights
+} from '../services/insightsService';
 import { creditsService } from '../services/creditsService';
 
 const InsightsPage: React.FC = () => {
@@ -67,6 +85,8 @@ const InsightsPage: React.FC = () => {
   const [insights, setInsights] = useState<InsightResponse | null>(null);
   const [credits, setCredits] = useState(0);
   const [targetPageUrl, setTargetPageUrl] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const [dataTabActive, setDataTabActive] = useState(0);
 
   // Initialize date ranges and check for URL parameters
   useEffect(() => {
@@ -117,145 +137,45 @@ const InsightsPage: React.FC = () => {
     setInsights(null);
   };
 
-  const handleGenerateInsights = async () => {
-    if (credits <= 0) {
-      setError('You need at least 1 credit to generate insights. Please visit your account settings to add more credits.');
-      return;
-    }
-
+  const handleGenerateInsights = async (formData: { siteUrl: string; period: string; }) => {
+    setLoading(true);
     try {
-      setGenerating(true);
-      setError(null);
-
-      if (!selectedProperty) {
-        setError('Please select a property first.');
-        setGenerating(false);
-        return;
-      }
-
-      console.log(`Generating ${targetPageUrl ? 'page' : 'site'} insights for property:`, selectedProperty.siteUrl);
-      
-      try {
-        let response;
-
-        // If we have a targetPageUrl, use generatePageInsights instead of generateInsights
-        if (targetPageUrl) {
-          console.log('Generating insights for specific page:', targetPageUrl);
-          
-          response = await insightsService.generatePageInsights({
-            siteUrl: selectedProperty.siteUrl,
-            pageUrl: targetPageUrl,
-            period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
-            data: {
-              property: selectedProperty.siteUrl,
-              dateRange: {
-                start: selectedRange.startDate,
-                end: selectedRange.endDate,
-                label: selectedRange.label
-              }
-            }
-          });
-        } else {
-          // Generate site-wide insights
-          response = await insightsService.generateInsights({
-            siteUrl: selectedProperty.siteUrl,
-            period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
-            data: {
-              property: selectedProperty.siteUrl,
-              dateRange: {
-                start: selectedRange.startDate,
-                end: selectedRange.endDate,
-                label: selectedRange.label
-              }
-            }
-          });
-        }
-        
-        setInsights(response);
-        setCredits(prev => Math.max(0, prev - 1));
-      } catch (apiError: any) {
-        console.error(`API Error generating ${targetPageUrl ? 'page' : 'site'} insights:`, apiError);
-        
-        // Try to use mock data with a different API call
-        try {
-          console.log('Attempting to use mock data as fallback...');
-          const mockRequest = {
-            siteUrl: selectedProperty.siteUrl,
-            period: `${selectedRange.startDate} to ${selectedRange.endDate}`,
-            data: {
-              property: selectedProperty.siteUrl,
-              targetPageUrl: targetPageUrl || null,
-              dateRange: {
-                start: selectedRange.startDate,
-                end: selectedRange.endDate,
-                label: selectedRange.label
-              },
-              useMock: true // Signal to use mock data
-            }
-          };
-
-          const mockResponse = targetPageUrl
-            ? await insightsService.generatePageInsights({
-                ...mockRequest,
-                pageUrl: targetPageUrl
-              })
-            : await insightsService.generateInsights(mockRequest);
-          
-          // If we got mock data, use it but show a warning
-          setInsights(mockResponse);
-          setCredits(prev => Math.max(0, prev - 1));
-          setError('Note: We\'re currently showing sample insights because our AI service is temporarily unavailable. Your account has not been charged.');
-          
-          return; // Early return to avoid showing additional error messages
-        } catch (mockError) {
-          console.error('Failed to get mock insights:', mockError);
-          // Continue to error handling
-        }
-        
-        // Provide specific error messages based on error type
-        if (apiError.message && apiError.message.includes('500')) {
-          setError('Our AI service is temporarily unavailable. Please try again later.');
-        } else if (apiError.message && apiError.message.includes('timeout')) {
-          setError('The request timed out. Try again with a shorter date range.');
-        } else if (apiError.response && apiError.response.status === 401) {
-          setError('Your session has expired. Please refresh the page and log in again.');
-        } else {
-          setError('Failed to generate insights. Please try again later.');
-        }
-        
-        // Create a fallback insights object so the UI doesn't break
-        setInsights({
-          summary: `Unable to generate ${targetPageUrl ? 'page' : 'site'} insights at this time`,
-          performance: {
-            trend: "stable",
-            details: "We encountered an error while generating your insights."
-          },
-          topFindings: [{
-            title: "Service temporarily unavailable",
-            description: "We're experiencing technical difficulties with our AI service. Please try again later."
-          }],
-          recommendations: [{
-            title: "Check back soon",
-            description: "Our team has been notified of this issue and is working to resolve it.",
-            priority: "medium"
-          }, {
-            title: "Try Google Search Console directly",
-            description: "In the meantime, you can view your data directly in Google Search Console.",
-            priority: "high"
-          }]
-        });
-      }
-    } catch (err) {
-      console.error('Failed to generate insights:', err);
-      setError('An unexpected error occurred. Please try again.');
+      const insights = await insightsService.getInsights(formData.siteUrl, formData.period);
+      setInsights(insights);
+    } catch (error) {
+      console.error('Error generating insights:', error);
+      setError('Failed to generate insights');
     } finally {
-      setGenerating(false);
+      setLoading(false);
     }
   };
 
-  const handleRefresh = () => {
-    setInsights(null);
-    handleGenerateInsights();
+  const handleRefresh = async () => {
+    if (!selectedProperty) return;
+    
+    setLoading(true);
+    try {
+      const insights = await insightsService.getInsights(
+        selectedProperty.siteUrl,
+        `${selectedRange.startDate} to ${selectedRange.endDate}`,
+        targetPageUrl,
+        true // refresh data
+      );
+      setInsights(insights);
+      
+      // Refresh credits
+      try {
+        const userCredits = await creditsService.getCredits();
+        setCredits(userCredits);
+      } catch (creditError) {
+        console.error('Error fetching credits:', creditError);
+      }
+    } catch (error) {
+      console.error('Error refreshing insights:', error);
+      setError('Failed to refresh insights');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderTrendIcon = (trend: 'up' | 'down' | 'stable' | 'mixed') => {
@@ -338,6 +258,160 @@ const InsightsPage: React.FC = () => {
       case 'low':
         return <ArrowDownward sx={{ color: theme.palette.success.main }} />;
     }
+  };
+
+  // Function to handle tab changes
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
+
+  const handleDataTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setDataTabActive(newValue);
+  };
+
+  // Render raw data section with metrics
+  const renderRawDataSection = () => {
+    if (!insights || !insights.raw_data) return null;
+    
+    return (
+      <Box sx={{ mt: 2 }}>
+        <Tabs 
+          value={dataTabActive} 
+          onChange={handleDataTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
+        >
+          <Tab label="Performance Metrics" icon={<TimelineIcon />} iconPosition="start" />
+          <Tab label="Top Keywords" icon={<KeywordIcon />} iconPosition="start" />
+          <Tab label="Top Pages" icon={<ChartIcon />} iconPosition="start" />
+        </Tabs>
+        
+        {/* Performance Metrics Tab */}
+        {dataTabActive === 0 && (
+          <TableContainer component={Paper} variant="outlined">
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Metric</TableCell>
+                  <TableCell>Values</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell component="th" scope="row">Clicks</TableCell>
+                  <TableCell>
+                    {insights.raw_data.metrics.clicks.length > 0
+                      ? insights.raw_data.metrics.clicks.join(', ')
+                      : 'No data available'}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">Impressions</TableCell>
+                  <TableCell>
+                    {insights.raw_data.metrics.impressions.length > 0
+                      ? insights.raw_data.metrics.impressions.join(', ')
+                      : 'No data available'}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">CTR</TableCell>
+                  <TableCell>
+                    {insights.raw_data.metrics.ctr.length > 0
+                      ? insights.raw_data.metrics.ctr.map((ctr: number) => `${(ctr * 100).toFixed(2)}%`).join(', ')
+                      : 'No data available'}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">Position</TableCell>
+                  <TableCell>
+                    {insights.raw_data.metrics.position.length > 0
+                      ? insights.raw_data.metrics.position.join(', ')
+                      : 'No data available'}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+        
+        {/* Top Keywords Tab */}
+        {dataTabActive === 1 && (
+          insights.raw_data.top_keywords.length > 0 ? (
+            <TableContainer component={Paper} variant="outlined">
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Keyword</TableCell>
+                    <TableCell align="right">Clicks</TableCell>
+                    <TableCell align="right">Impressions</TableCell>
+                    <TableCell align="right">CTR</TableCell>
+                    <TableCell align="right">Position</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {insights.raw_data.top_keywords.map((keyword: TopItem, index: number) => (
+                    <TableRow key={index}>
+                      <TableCell component="th" scope="row">{keyword.name}</TableCell>
+                      <TableCell align="right">{keyword.metrics.clicks || '-'}</TableCell>
+                      <TableCell align="right">{keyword.metrics.impressions || '-'}</TableCell>
+                      <TableCell align="right">
+                        {keyword.metrics.ctr 
+                          ? `${(keyword.metrics.ctr * 100).toFixed(2)}%` 
+                          : '-'}
+                      </TableCell>
+                      <TableCell align="right">{keyword.metrics.position?.toFixed(1) || '-'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Alert severity="info">No keyword data available</Alert>
+          )
+        )}
+        
+        {/* Top Pages Tab */}
+        {dataTabActive === 2 && (
+          insights.raw_data.top_pages.length > 0 ? (
+            <TableContainer component={Paper} variant="outlined">
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Page URL</TableCell>
+                    <TableCell align="right">Clicks</TableCell>
+                    <TableCell align="right">Impressions</TableCell>
+                    <TableCell align="right">CTR</TableCell>
+                    <TableCell align="right">Position</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {insights.raw_data.top_pages.map((page: TopItem, index: number) => (
+                    <TableRow key={index}>
+                      <TableCell component="th" scope="row" sx={{ maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <Tooltip title={page.name}>
+                          <span>{page.name}</span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell align="right">{page.metrics.clicks || '-'}</TableCell>
+                      <TableCell align="right">{page.metrics.impressions || '-'}</TableCell>
+                      <TableCell align="right">
+                        {page.metrics.ctr 
+                          ? `${(page.metrics.ctr * 100).toFixed(2)}%` 
+                          : '-'}
+                      </TableCell>
+                      <TableCell align="right">{page.metrics.position?.toFixed(1) || '-'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Alert severity="info">No page data available</Alert>
+          )
+        )}
+      </Box>
+    );
   };
 
   return (
@@ -430,11 +504,18 @@ const InsightsPage: React.FC = () => {
             <Button 
               variant="contained" 
               size="large"
-              onClick={handleGenerateInsights}
-              disabled={generating || credits < 1}
-              startIcon={generating ? <CircularProgress size={20} /> : <LightbulbIcon />}
+              onClick={() => {
+                if (selectedProperty) {
+                  handleGenerateInsights({
+                    siteUrl: selectedProperty.siteUrl,
+                    period: `${selectedRange.startDate} to ${selectedRange.endDate}`
+                  });
+                }
+              }}
+              disabled={loading || credits < 1}
+              startIcon={loading ? <CircularProgress size={20} /> : <LightbulbIcon />}
             >
-              {generating ? 'Generating...' : 'Generate Insights'}
+              Generate Insights (1 credit)
             </Button>
           </Box>
           
@@ -536,9 +617,18 @@ const InsightsPage: React.FC = () => {
           </Grid>
         </Paper>
       ) : (
-        // Display insights
         <Box>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Tabs 
+              value={activeTab} 
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+            >
+              <Tab label="AI Analysis" icon={<InsightsIcon />} iconPosition="start" />
+              <Tab label="Raw Data" icon={<RawDataIcon />} iconPosition="start" />
+            </Tabs>
+            
             <Button
               startIcon={<RefreshIcon />}
               onClick={handleRefresh}
@@ -548,373 +638,394 @@ const InsightsPage: React.FC = () => {
             </Button>
           </Box>
           
-          <Paper sx={{ p: 3, mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h5" component="h2">
-                Summary
-              </Typography>
-              {insights.performance && (
-                <Chip 
-                  icon={renderTrendIcon(insights.performance.trend)} 
-                  label={`Trend: ${insights.performance.trend.charAt(0).toUpperCase() + insights.performance.trend.slice(1)}`} 
-                  color={
-                    insights.performance.trend === 'up' ? 'success' : 
-                    insights.performance.trend === 'down' ? 'error' : 
-                    insights.performance.trend === 'mixed' ? 'warning' : 'default'
-                  }
-                  variant="outlined"
-                  size="small"
-                  sx={{ ml: 2 }}
-                />
-              )}
-              {insights.performance && insights.performance.changePercent && (
-                <Chip 
-                  label={`Change: ${insights.performance.changePercent}`}
-                  variant="outlined"
-                  size="small"
-                  sx={{ ml: 1 }}
-                />
-              )}
-              {insights.performance && insights.performance.timePeriod && (
-                <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
-                  {insights.performance.timePeriod}
+          {/* AI Analysis Tab */}
+          <Box hidden={activeTab !== 0}>
+            <Paper sx={{ p: 3, mb: 4 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h5" component="h2">
+                  Summary
                 </Typography>
-              )}
-            </Box>
-            <Typography variant="body1" paragraph>
-              {insights.summary}
-            </Typography>
-            {insights.performance && (
-              <>
-                {insights.performance.keyMetricChanges && insights.performance.keyMetricChanges.length > 0 && (
-                  <TableContainer component={Paper} variant="outlined" sx={{ mb: 2 }}>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Metric</TableCell>
-                          <TableCell align="right">Change</TableCell>
-                          <TableCell>Interpretation</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {insights.performance.keyMetricChanges.map((metric, i) => (
-                          <TableRow key={i}>
-                            <TableCell component="th" scope="row">
-                              {metric.metric.charAt(0).toUpperCase() + metric.metric.slice(1)}
-                            </TableCell>
-                            <TableCell align="right">
-                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                                {metric.change.startsWith('+') ? 
-                                  <TrendingUp fontSize="small" color="success" sx={{ mr: 0.5 }} /> :
-                                  metric.change.startsWith('-') ?
-                                  <TrendingDown fontSize="small" color="error" sx={{ mr: 0.5 }} /> :
-                                  <TrendingFlat fontSize="small" color="disabled" sx={{ mr: 0.5 }} />
-                                }
-                                {metric.change}
-                              </Box>
-                            </TableCell>
-                            <TableCell>{metric.interpretation}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                {insights.ai_analysis.performance && (
+                  <Chip 
+                    icon={renderTrendIcon(insights.ai_analysis.performance.trend)} 
+                    label={`Trend: ${insights.ai_analysis.performance.trend.charAt(0).toUpperCase() + insights.ai_analysis.performance.trend.slice(1)}`} 
+                    color={
+                      insights.ai_analysis.performance.trend === 'up' ? 'success' : 
+                      insights.ai_analysis.performance.trend === 'down' ? 'error' : 
+                      insights.ai_analysis.performance.trend === 'mixed' ? 'warning' : 'default'
+                    }
+                    variant="outlined"
+                    size="small"
+                    sx={{ ml: 2 }}
+                  />
                 )}
-                <Typography variant="body2" color="text.secondary">
-                  {insights.performance.details}
-                </Typography>
-              </>
-            )}
-          </Paper>
-          
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 3, height: '100%' }}>
-                <Typography variant="h6" component="h3" gutterBottom>
-                  Key Findings
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <List>
-                  {insights.topFindings.map((finding, index) => (
-                    <ListItem key={index} sx={{ px: 0 }}>
-                      <Card variant="outlined" sx={{ width: '100%', mb: 1 }}>
-                        <CardContent sx={{ pb: 2, '&:last-child': { pb: 2 } }}>
-                          <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-                            <InfoIcon color="primary" sx={{ mr: 1.5, mt: 0.3 }} />
-                            <Box sx={{ width: '100%' }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-                                <Typography variant="subtitle1" component="div">
-                                  {finding.title}
-                                </Typography>
-                                {renderImpactLevelIcon(finding.impactLevel)}
-                              </Box>
-                              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
-                                {finding.description}
-                              </Typography>
-                              {finding.dataPoints && finding.dataPoints.length > 0 && (
-                                <Box sx={{ mt: 1, bgcolor: 'background.default', p: 1, borderRadius: 1 }}>
-                                  <Typography variant="caption" component="div" sx={{ fontWeight: 'bold', mb: 0.5 }}>
-                                    Supporting Data:
-                                  </Typography>
-                                  <List dense disablePadding>
-                                    {finding.dataPoints.map((point, i) => (
-                                      <ListItem key={i} sx={{ py: 0.25 }}>
-                                        <ListItemIcon sx={{ minWidth: 24 }}>
-                                          <ArrowForward fontSize="small" color="disabled" />
-                                        </ListItemIcon>
-                                        <ListItemText primary={<Typography variant="caption">{point}</Typography>} />
-                                      </ListItem>
-                                    ))}
-                                  </List>
-                                </Box>
-                              )}
-                            </Box>
-                          </Box>
-                        </CardContent>
-                      </Card>
-                    </ListItem>
-                  ))}
-                </List>
-              </Paper>
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 3, height: '100%' }}>
-                <Typography variant="h6" component="h3" gutterBottom>
-                  Recommendations
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <List>
-                  {insights.recommendations.map((recommendation, index) => (
-                    <ListItem key={index} sx={{ px: 0 }}>
-                      <Card variant="outlined" sx={{ width: '100%', mb: 1 }}>
-                        <CardContent sx={{ pb: 2, '&:last-child': { pb: 2 } }}>
-                          <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-                            <Box sx={{ mr: 1.5, mt: 0.3 }}>
-                              {renderPriorityIcon(recommendation.priority)}
-                            </Box>
-                            <Box sx={{ width: '100%' }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-                                <Typography variant="subtitle1" component="div">
-                                  {recommendation.title}
-                                </Typography>
-                                <Chip 
-                                  label={recommendation.priority} 
-                                  size="small" 
-                                  color={
-                                    recommendation.priority === 'high' 
-                                      ? 'error' 
-                                      : recommendation.priority === 'medium' 
-                                        ? 'warning' 
-                                        : 'success'
+                {insights.ai_analysis.performance && insights.ai_analysis.performance.changePercent && (
+                  <Chip 
+                    label={`Change: ${insights.ai_analysis.performance.changePercent}`}
+                    variant="outlined"
+                    size="small"
+                    sx={{ ml: 1 }}
+                  />
+                )}
+                {insights.ai_analysis.performance && insights.ai_analysis.performance.timePeriod && (
+                  <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
+                    {insights.ai_analysis.performance.timePeriod}
+                  </Typography>
+                )}
+              </Box>
+              <Typography variant="body1" paragraph>
+                {insights.ai_analysis.summary}
+              </Typography>
+              {insights.ai_analysis.performance && (
+                <>
+                  {insights.ai_analysis.performance.keyMetricChanges && insights.ai_analysis.performance.keyMetricChanges.length > 0 && (
+                    <TableContainer component={Paper} variant="outlined" sx={{ mb: 2 }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Metric</TableCell>
+                            <TableCell align="right">Change</TableCell>
+                            <TableCell>Interpretation</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {insights.ai_analysis.performance.keyMetricChanges.map((metric, i) => (
+                            <TableRow key={i}>
+                              <TableCell component="th" scope="row">
+                                {metric.metric.charAt(0).toUpperCase() + metric.metric.slice(1)}
+                              </TableCell>
+                              <TableCell align="right">
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                                  {metric.change.startsWith('+') ? 
+                                    <TrendingUp fontSize="small" color="success" sx={{ mr: 0.5 }} /> :
+                                    metric.change.startsWith('-') ?
+                                    <TrendingDown fontSize="small" color="error" sx={{ mr: 0.5 }} /> :
+                                    <TrendingFlat fontSize="small" color="disabled" sx={{ mr: 0.5 }} />
                                   }
-                                  sx={{ ml: 1, height: 20 }}
-                                />
-                              </Box>
-                              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                {recommendation.description}
-                              </Typography>
-                              
-                              {(recommendation.expectedOutcome || recommendation.implementationSteps) && (
-                                <Accordion 
-                                  disableGutters 
-                                  elevation={0} 
-                                  sx={{ 
-                                    mt: 1,
-                                    '&:before': { display: 'none' },
-                                    bgcolor: 'background.default',
-                                  }}
-                                >
-                                  <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    sx={{ minHeight: '36px', p: 0 }}
-                                  >
-                                    <Typography variant="caption" sx={{ fontWeight: 'bold' }}>Implementation Details</Typography>
-                                  </AccordionSummary>
-                                  <AccordionDetails sx={{ px: 1, py: 0 }}>
-                                    {recommendation.expectedOutcome && (
-                                      <Typography variant="caption" component="div" sx={{ mb: 1 }}>
-                                        <strong>Expected Outcome:</strong> {recommendation.expectedOutcome}
-                                      </Typography>
-                                    )}
-                                    
-                                    {recommendation.implementationSteps && recommendation.implementationSteps.length > 0 && (
-                                      <>
-                                        <Typography variant="caption" component="div" sx={{ fontWeight: 'bold', mb: 0.5 }}>
-                                          Implementation Steps:
-                                        </Typography>
-                                        <List dense disablePadding>
-                                          {recommendation.implementationSteps.map((step, i) => (
-                                            <ListItem key={i} sx={{ py: 0.25 }}>
-                                              <ListItemIcon sx={{ minWidth: 24 }}>
-                                                <CheckCircleIcon fontSize="small" color="primary" />
-                                              </ListItemIcon>
-                                              <ListItemText primary={<Typography variant="caption">{step}</Typography>} />
-                                            </ListItem>
-                                          ))}
-                                        </List>
-                                      </>
-                                    )}
-                                  </AccordionDetails>
-                                </Accordion>
-                              )}
-                            </Box>
-                          </Box>
-                        </CardContent>
-                      </Card>
-                    </ListItem>
-                  ))}
-                </List>
-              </Paper>
-            </Grid>
+                                  {metric.change}
+                                </Box>
+                              </TableCell>
+                              <TableCell>{metric.interpretation}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  )}
+                  <Typography variant="body2" color="text.secondary">
+                    {insights.ai_analysis.performance.details}
+                  </Typography>
+                </>
+              )}
+              <Alert severity="info" sx={{ mt: 2 }}>
+                <Typography variant="caption">
+                  This analysis is AI-generated based on the raw data shown in the "Raw Data" tab. All insights are derived from actual GSC data.
+                </Typography>
+              </Alert>
+            </Paper>
             
-            {insights.opportunities && insights.opportunities.length > 0 && (
-              <Grid item xs={12}>
-                <Paper sx={{ p: 3 }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <Paper sx={{ p: 3, height: '100%' }}>
                   <Typography variant="h6" component="h3" gutterBottom>
-                    Opportunities
+                    Key Findings
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  <Grid container spacing={2}>
-                    {insights.opportunities.map((opportunity, index) => (
-                      <Grid item xs={12} md={4} key={index}>
-                        <Card variant="outlined" sx={{ height: '100%' }}>
-                          <CardContent>
+                  <List>
+                    {insights.ai_analysis.topFindings.map((finding, index) => (
+                      <ListItem key={index} sx={{ px: 0 }}>
+                        <Card variant="outlined" sx={{ width: '100%', mb: 1 }}>
+                          <CardContent sx={{ pb: 2, '&:last-child': { pb: 2 } }}>
                             <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-                              <OpportunityIcon color="primary" sx={{ mr: 1.5, mt: 0.3 }} />
-                              <Box>
+                              <InfoIcon color="primary" sx={{ mr: 1.5, mt: 0.3 }} />
+                              <Box sx={{ width: '100%' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
                                   <Typography variant="subtitle1" component="div">
-                                    {opportunity.title}
+                                    {finding.title}
                                   </Typography>
-                                  {renderDifficultyChip(opportunity.difficulty)}
+                                  {renderImpactLevelIcon(finding.impactLevel)}
                                 </Box>
                                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
-                                  {opportunity.description}
+                                  {finding.description}
                                 </Typography>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
-                                  <Typography variant="caption" component="div">
-                                    <strong>Estimated Impact:</strong> {opportunity.estimatedImpact}
-                                  </Typography>
-                                  <Typography variant="caption" component="div">
-                                    <strong>Time Frame:</strong> {opportunity.timeFrame}
-                                  </Typography>
-                                </Box>
+                                {finding.dataPoints && finding.dataPoints.length > 0 && (
+                                  <Box sx={{ mt: 1, bgcolor: 'background.default', p: 1, borderRadius: 1 }}>
+                                    <Typography variant="caption" component="div" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                                      Supporting Data:
+                                    </Typography>
+                                    <List dense disablePadding>
+                                      {finding.dataPoints.map((point, i) => (
+                                        <ListItem key={i} sx={{ py: 0.25 }}>
+                                          <ListItemIcon sx={{ minWidth: 24 }}>
+                                            <ArrowForward fontSize="small" color="disabled" />
+                                          </ListItemIcon>
+                                          <ListItemText primary={<Typography variant="caption">{point}</Typography>} />
+                                        </ListItem>
+                                      ))}
+                                    </List>
+                                  </Box>
+                                )}
                               </Box>
                             </Box>
                           </CardContent>
                         </Card>
-                      </Grid>
+                      </ListItem>
                     ))}
-                  </Grid>
+                  </List>
                 </Paper>
               </Grid>
-            )}
-            
-            {insights.keywordInsights && (
-              <Grid item xs={12}>
-                <Paper sx={{ p: 3 }}>
+              
+              <Grid item xs={12} md={6}>
+                <Paper sx={{ p: 3, height: '100%' }}>
                   <Typography variant="h6" component="h3" gutterBottom>
-                    Keyword Insights
+                    Recommendations
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  
-                  <Typography variant="body2" paragraph>
-                    {insights.keywordInsights.analysis}
-                  </Typography>
-                  
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <KeywordIcon color="success" sx={{ mr: 1 }} />
-                            <Typography variant="subtitle1">
-                              Rising Keywords
-                            </Typography>
-                          </Box>
-                          {insights.keywordInsights.risingKeywords.length > 0 ? (
-                            <List dense disablePadding>
-                              {insights.keywordInsights.risingKeywords.map((keyword, i) => (
-                                <ListItem key={i} sx={{ py: 0.5 }}>
-                                  <ListItemIcon sx={{ minWidth: 28 }}>
-                                    <TrendingUp fontSize="small" color="success" />
-                                  </ListItemIcon>
-                                  <ListItemText primary={keyword} />
-                                </ListItem>
-                              ))}
-                            </List>
-                          ) : (
-                            <Typography variant="body2" color="text.secondary">
-                              No rising keywords identified.
-                            </Typography>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                    
-                    <Grid item xs={12} md={4}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <KeywordIcon color="error" sx={{ mr: 1 }} />
-                            <Typography variant="subtitle1">
-                              Declining Keywords
-                            </Typography>
-                          </Box>
-                          {insights.keywordInsights.decliningKeywords.length > 0 ? (
-                            <List dense disablePadding>
-                              {insights.keywordInsights.decliningKeywords.map((keyword, i) => (
-                                <ListItem key={i} sx={{ py: 0.5 }}>
-                                  <ListItemIcon sx={{ minWidth: 28 }}>
-                                    <TrendingDown fontSize="small" color="error" />
-                                  </ListItemIcon>
-                                  <ListItemText primary={keyword} />
-                                </ListItem>
-                              ))}
-                            </List>
-                          ) : (
-                            <Typography variant="body2" color="text.secondary">
-                              No declining keywords identified.
-                            </Typography>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                    
-                    <Grid item xs={12} md={4}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <KeywordIcon color="warning" sx={{ mr: 1 }} />
-                            <Typography variant="subtitle1">
-                              Missed Opportunities
-                            </Typography>
-                          </Box>
-                          {insights.keywordInsights.missedOpportunities.length > 0 ? (
-                            <List dense disablePadding>
-                              {insights.keywordInsights.missedOpportunities.map((keyword, i) => (
-                                <ListItem key={i} sx={{ py: 0.5 }}>
-                                  <ListItemIcon sx={{ minWidth: 28 }}>
-                                    <LightbulbIcon fontSize="small" color="warning" />
-                                  </ListItemIcon>
-                                  <ListItemText primary={keyword} />
-                                </ListItem>
-                              ))}
-                            </List>
-                          ) : (
-                            <Typography variant="body2" color="text.secondary">
-                              No missed opportunities identified.
-                            </Typography>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  </Grid>
+                  <List>
+                    {insights.ai_analysis.recommendations.map((recommendation, index) => (
+                      <ListItem key={index} sx={{ px: 0 }}>
+                        <Card variant="outlined" sx={{ width: '100%', mb: 1 }}>
+                          <CardContent sx={{ pb: 2, '&:last-child': { pb: 2 } }}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                              <Box sx={{ mr: 1.5, mt: 0.3 }}>
+                                {renderPriorityIcon(recommendation.priority)}
+                              </Box>
+                              <Box sx={{ width: '100%' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                                  <Typography variant="subtitle1" component="div">
+                                    {recommendation.title}
+                                  </Typography>
+                                  <Chip 
+                                    label={recommendation.priority} 
+                                    size="small" 
+                                    color={
+                                      recommendation.priority === 'high' 
+                                        ? 'error' 
+                                        : recommendation.priority === 'medium' 
+                                          ? 'warning' 
+                                          : 'success'
+                                    }
+                                    sx={{ ml: 1, height: 20 }}
+                                  />
+                                </Box>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                  {recommendation.description}
+                                </Typography>
+                                
+                                {(recommendation.expectedOutcome || recommendation.implementationSteps) && (
+                                  <Accordion 
+                                    disableGutters 
+                                    elevation={0} 
+                                    sx={{ 
+                                      mt: 1,
+                                      '&:before': { display: 'none' },
+                                      bgcolor: 'background.default',
+                                    }}
+                                  >
+                                    <AccordionSummary
+                                      expandIcon={<ExpandMoreIcon />}
+                                      sx={{ minHeight: '36px', p: 0 }}
+                                    >
+                                      <Typography variant="caption" sx={{ fontWeight: 'bold' }}>Implementation Details</Typography>
+                                    </AccordionSummary>
+                                    <AccordionDetails sx={{ px: 1, py: 0 }}>
+                                      {recommendation.expectedOutcome && (
+                                        <Typography variant="caption" component="div" sx={{ mb: 1 }}>
+                                          <strong>Expected Outcome:</strong> {recommendation.expectedOutcome}
+                                        </Typography>
+                                      )}
+                                      
+                                      {recommendation.implementationSteps && recommendation.implementationSteps.length > 0 && (
+                                        <>
+                                          <Typography variant="caption" component="div" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                                            Implementation Steps:
+                                          </Typography>
+                                          <List dense disablePadding>
+                                            {recommendation.implementationSteps.map((step, i) => (
+                                              <ListItem key={i} sx={{ py: 0.25 }}>
+                                                <ListItemIcon sx={{ minWidth: 24 }}>
+                                                  <CheckCircleIcon fontSize="small" color="primary" />
+                                                </ListItemIcon>
+                                                <ListItemText primary={<Typography variant="caption">{step}</Typography>} />
+                                              </ListItem>
+                                            ))}
+                                          </List>
+                                        </>
+                                      )}
+                                    </AccordionDetails>
+                                  </Accordion>
+                                )}
+                              </Box>
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      </ListItem>
+                    ))}
+                  </List>
                 </Paper>
               </Grid>
-            )}
-          </Grid>
+              
+              {insights.ai_analysis.opportunities && insights.ai_analysis.opportunities.length > 0 && (
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 3 }}>
+                    <Typography variant="h6" component="h3" gutterBottom>
+                      Opportunities
+                    </Typography>
+                    <Divider sx={{ mb: 2 }} />
+                    <Grid container spacing={2}>
+                      {insights.ai_analysis.opportunities.map((opportunity, index) => (
+                        <Grid item xs={12} md={4} key={index}>
+                          <Card variant="outlined" sx={{ height: '100%' }}>
+                            <CardContent>
+                              <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                                <OpportunityIcon color="primary" sx={{ mr: 1.5, mt: 0.3 }} />
+                                <Box>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                                    <Typography variant="subtitle1" component="div">
+                                      {opportunity.title}
+                                    </Typography>
+                                    {renderDifficultyChip(opportunity.difficulty)}
+                                  </Box>
+                                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
+                                    {opportunity.description}
+                                  </Typography>
+                                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
+                                    <Typography variant="caption" component="div">
+                                      <strong>Estimated Impact:</strong> {opportunity.estimatedImpact}
+                                    </Typography>
+                                    <Typography variant="caption" component="div">
+                                      <strong>Time Frame:</strong> {opportunity.timeFrame}
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Paper>
+                </Grid>
+              )}
+              
+              {insights.ai_analysis.keywordInsights && (
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 3 }}>
+                    <Typography variant="h6" component="h3" gutterBottom>
+                      Keyword Insights
+                    </Typography>
+                    <Divider sx={{ mb: 2 }} />
+                    
+                    <Typography variant="body2" paragraph>
+                      {insights.ai_analysis.keywordInsights.analysis}
+                    </Typography>
+                    
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} md={4}>
+                        <Card variant="outlined">
+                          <CardContent>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                              <KeywordIcon color="success" sx={{ mr: 1 }} />
+                              <Typography variant="subtitle1">
+                                Rising Keywords
+                              </Typography>
+                            </Box>
+                            {insights.ai_analysis.keywordInsights.risingKeywords.length > 0 ? (
+                              <List dense disablePadding>
+                                {insights.ai_analysis.keywordInsights.risingKeywords.map((keyword, i) => (
+                                  <ListItem key={i} sx={{ py: 0.5 }}>
+                                    <ListItemIcon sx={{ minWidth: 28 }}>
+                                      <TrendingUp fontSize="small" color="success" />
+                                    </ListItemIcon>
+                                    <ListItemText primary={keyword} />
+                                  </ListItem>
+                                ))}
+                              </List>
+                            ) : (
+                              <Typography variant="body2" color="text.secondary">
+                                No rising keywords identified.
+                              </Typography>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                      
+                      <Grid item xs={12} md={4}>
+                        <Card variant="outlined">
+                          <CardContent>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                              <KeywordIcon color="error" sx={{ mr: 1 }} />
+                              <Typography variant="subtitle1">
+                                Declining Keywords
+                              </Typography>
+                            </Box>
+                            {insights.ai_analysis.keywordInsights.decliningKeywords.length > 0 ? (
+                              <List dense disablePadding>
+                                {insights.ai_analysis.keywordInsights.decliningKeywords.map((keyword, i) => (
+                                  <ListItem key={i} sx={{ py: 0.5 }}>
+                                    <ListItemIcon sx={{ minWidth: 28 }}>
+                                      <TrendingDown fontSize="small" color="error" />
+                                    </ListItemIcon>
+                                    <ListItemText primary={keyword} />
+                                  </ListItem>
+                                ))}
+                              </List>
+                            ) : (
+                              <Typography variant="body2" color="text.secondary">
+                                No declining keywords identified.
+                              </Typography>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                      
+                      <Grid item xs={12} md={4}>
+                        <Card variant="outlined">
+                          <CardContent>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                              <KeywordIcon color="warning" sx={{ mr: 1 }} />
+                              <Typography variant="subtitle1">
+                                Missed Opportunities
+                              </Typography>
+                            </Box>
+                            {insights.ai_analysis.keywordInsights.missedOpportunities.length > 0 ? (
+                              <List dense disablePadding>
+                                {insights.ai_analysis.keywordInsights.missedOpportunities.map((keyword, i) => (
+                                  <ListItem key={i} sx={{ py: 0.5 }}>
+                                    <ListItemIcon sx={{ minWidth: 28 }}>
+                                      <LightbulbIcon fontSize="small" color="warning" />
+                                    </ListItemIcon>
+                                    <ListItemText primary={keyword} />
+                                  </ListItem>
+                                ))}
+                              </List>
+                            ) : (
+                              <Typography variant="body2" color="text.secondary">
+                                No missed opportunities identified.
+                              </Typography>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                </Grid>
+              )}
+            </Grid>
+          </Box>
+          
+          {/* Raw Data Tab */}
+          <Box hidden={activeTab !== 1}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h5" component="h2" gutterBottom>
+                Raw GSC Data
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                This is the actual data from Google Search Console that was used for analysis.
+              </Typography>
+              {renderRawDataSection()}
+            </Paper>
+          </Box>
         </Box>
       )}
     </Box>

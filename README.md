@@ -53,6 +53,12 @@ The Search Console Analytics frontend provides a comprehensive dashboard for ana
 
 ## Recent Improvements
 
+### Raw Data and AI Analysis Separation
+- Enhanced insights data structure to clearly separate raw data from AI analysis
+- Added tabbed interface to show both raw data and AI-generated insights
+- Implemented detailed tables for raw metrics, keywords, and pages data
+- Ensured AI analysis is based exclusively on actual data, preventing hallucinated metrics
+
 ### TypeScript Integration
 - Added comprehensive type definitions for all API responses
 - Enhanced component props with proper TypeScript interfaces

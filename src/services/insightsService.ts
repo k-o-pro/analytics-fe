@@ -3,10 +3,12 @@ import { api } from './api';
 export type InsightRequest = {
   siteUrl: string;
   period: string;
-  data: any;
+  targetPageUrl?: string;
+  refreshData?: boolean;
+  useMock?: boolean;
 };
 
-export type KeyMetricChange = {
+export type MetricChange = {
   metric: string;
   change: string;
   interpretation: string;
@@ -44,21 +46,59 @@ export type KeywordInsights = {
   analysis: string;
 };
 
-export type Performance = {
+export interface Performance {
   trend: 'up' | 'down' | 'stable' | 'mixed';
+  details: string;
   changePercent?: string;
   timePeriod?: string;
-  keyMetricChanges?: KeyMetricChange[];
-  details: string;
+  keyMetricChanges?: MetricChange[];
+}
+
+export interface TopFinding {
+  title: string;
+  description: string;
+  impactLevel: 'high' | 'medium' | 'low';
+  dataPoints?: string[];
+}
+
+export type RawDataMetrics = {
+  clicks: number[];
+  impressions: number[];
+  ctr: number[];
+  position: number[];
 };
 
-export type InsightResponse = {
+export interface TopItem {
+  name: string;
+  metrics: {
+    clicks?: number;
+    impressions?: number;
+    ctr?: number;
+    position?: number;
+  };
+}
+
+export interface RawData {
+  metrics: RawDataMetrics;
+  top_keywords: TopItem[];
+  top_pages: TopItem[];
+  time_period: string;
+}
+
+export type AIAnalysis = {
   summary: string;
   performance: Performance;
   topFindings: Finding[];
   opportunities?: Opportunity[];
   recommendations: Recommendation[];
   keywordInsights?: KeywordInsights;
+};
+
+export type InsightResponse = {
+  success: boolean;
+  raw_data: RawData;
+  ai_analysis: AIAnalysis;
+  error?: string;
 };
 
 export type PageInsightRequest = {
@@ -75,7 +115,7 @@ export const insightsService = {
       console.log('Generating insights with request:', {
         siteUrl: request.siteUrl,
         period: request.period,
-        hasData: !!request.data
+        hasData: !!request.targetPageUrl || !!request.refreshData || !!request.useMock
       });
       
       // First try to get real insights
@@ -92,10 +132,12 @@ export const insightsService = {
         
         // Check if the response has the expected structure
         if (!response.data || 
-            !response.data.summary || 
-            !response.data.performance ||
-            !response.data.topFindings ||
-            !response.data.recommendations) {
+            !response.data.raw_data || 
+            !response.data.ai_analysis ||
+            !response.data.ai_analysis.summary || 
+            !response.data.ai_analysis.performance ||
+            !response.data.ai_analysis.topFindings ||
+            !response.data.ai_analysis.recommendations) {
           console.error('Invalid insights response format:', response.data);
           throw new Error('Invalid response format');
         }
@@ -125,20 +167,34 @@ export const insightsService = {
       
       // Return a simplified error response
       return {
-        summary: "Unable to generate insights at this time",
-        performance: {
-          trend: "stable" as const,
-          details: "Performance data unavailable due to a service error."
+        success: false,
+        raw_data: {
+          metrics: {
+            clicks: [],
+            impressions: [],
+            ctr: [],
+            position: []
+          },
+          top_keywords: [],
+          top_pages: [],
+          time_period: ""
         },
-        topFindings: [{
-          title: "Service temporarily unavailable",
-          description: "We're experiencing issues connecting to our AI service. Please try again later."
-        }],
-        recommendations: [{
-          title: "Check connectivity",
-          description: "Ensure you have a stable internet connection and try again.",
-          priority: "high" as const
-        }]
+        ai_analysis: {
+          summary: "Unable to generate insights at this time",
+          performance: {
+            trend: "stable" as const,
+            details: "Performance data unavailable due to a service error."
+          },
+          topFindings: [{
+            title: "Service temporarily unavailable",
+            description: "We're experiencing issues connecting to our AI service. Please try again later."
+          }],
+          recommendations: [{
+            title: "Check connectivity",
+            description: "Ensure you have a stable internet connection and try again.",
+            priority: "high" as const
+          }]
+        }
       };
     }
   },
@@ -150,10 +206,12 @@ export const insightsService = {
       
       // Check if the response has the expected structure
       if (!response.data || 
-          !response.data.summary || 
-          !response.data.performance ||
-          !response.data.topFindings ||
-          !response.data.recommendations) {
+          !response.data.raw_data || 
+          !response.data.ai_analysis ||
+          !response.data.ai_analysis.summary || 
+          !response.data.ai_analysis.performance ||
+          !response.data.ai_analysis.topFindings ||
+          !response.data.ai_analysis.recommendations) {
         console.error('Invalid page insights response format:', response.data);
         throw new Error('Invalid response format from insights service');
       }
@@ -172,10 +230,12 @@ export const insightsService = {
       
       // Check if the response has the expected structure
       if (!response.data || 
-          !response.data.summary || 
-          !response.data.performance ||
-          !response.data.topFindings ||
-          !response.data.recommendations) {
+          !response.data.raw_data || 
+          !response.data.ai_analysis ||
+          !response.data.ai_analysis.summary || 
+          !response.data.ai_analysis.performance ||
+          !response.data.ai_analysis.topFindings ||
+          !response.data.ai_analysis.recommendations) {
         console.error('Invalid refreshed insights response format:', response.data);
         throw new Error('Invalid response format from insights service');
       }
@@ -183,6 +243,72 @@ export const insightsService = {
       return response.data;
     } catch (error) {
       console.error('Failed to refresh insights:', error);
+      throw error;
+    }
+  },
+
+  // Function to get insights for a site or page
+  async getInsights(siteUrl: string, period: string, targetPageUrl?: string, refreshData?: boolean): Promise<InsightResponse> {
+    try {
+      const endpoint = targetPageUrl 
+        ? `/insights/page?url=${encodeURIComponent(targetPageUrl)}&mock=true` 
+        : '/insights?mock=true';
+      
+      const payload: InsightRequest = {
+        siteUrl,
+        period
+      };
+      
+      // Add optional properties only if they're defined
+      if (targetPageUrl) {
+        payload.targetPageUrl = targetPageUrl;
+      }
+      
+      if (refreshData !== undefined) {
+        payload.refreshData = refreshData;
+      }
+
+      const response = await api.post(endpoint, payload);
+      
+      // Verify that the response has the expected structure
+      if (response.data) {
+        if (!response.data.raw_data || !response.data.ai_analysis) {
+          console.warn('Response does not follow the expected format', response.data);
+          
+          // If the response doesn't have the expected structure, try to adapt it
+          if (!response.data.raw_data && !response.data.ai_analysis) {
+            // This might be an old format response
+            const adaptedResponse: InsightResponse = {
+              success: true,
+              raw_data: {
+                metrics: {
+                  clicks: [],
+                  impressions: [],
+                  ctr: [],
+                  position: []
+                },
+                top_keywords: [],
+                top_pages: [],
+                time_period: period
+              },
+              ai_analysis: {
+                summary: response.data.summary || 'No summary available',
+                performance: response.data.performance || {
+                  trend: 'stable',
+                  details: 'No details available'
+                },
+                topFindings: response.data.topFindings || [],
+                recommendations: response.data.recommendations || []
+              }
+            };
+            return adaptedResponse;
+          }
+        }
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error getting insights:', error);
       throw error;
     }
   }
