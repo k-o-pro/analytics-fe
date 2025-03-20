@@ -72,7 +72,6 @@ const InsightsPage: React.FC = () => {
     label: 'Last 30 days'
   });
   const [loading, setLoading] = useState(false);
-  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [insights, setInsights] = useState<InsightResponse | null>(null);
   const [credits, setCredits] = useState(0);
