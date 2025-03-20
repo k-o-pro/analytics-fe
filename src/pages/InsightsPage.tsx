@@ -255,11 +255,11 @@ const InsightsPage: React.FC = () => {
   };
 
   // Function to handle tab changes
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
 
-  const handleDataTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleDataTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setDataTabActive(newValue);
   };
 
