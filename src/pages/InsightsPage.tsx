@@ -57,12 +57,7 @@ import { DateRange, GSCProperty } from '../types/api';
 import { 
   insightsService, 
   InsightResponse, 
-  TopItem, 
-  Performance, 
-  TopFinding, 
-  Recommendation, 
-  Opportunity,
-  KeywordInsights
+  TopItem
 } from '../services/insightsService';
 import { creditsService } from '../services/creditsService';
 
