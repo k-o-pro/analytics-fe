@@ -108,6 +108,22 @@ export type PageInsightRequest = {
   data: any;
 };
 
+// Define an interface for legacy response format
+interface LegacyInsightResponse {
+  summary?: string;
+  performance?: {
+    trend: 'up' | 'down' | 'stable' | 'mixed';
+    details: string;
+    changePercent?: string;
+    timePeriod?: string;
+    keyMetricChanges?: MetricChange[];
+  };
+  topFindings?: TopFinding[];
+  recommendations?: Recommendation[];
+  opportunities?: Opportunity[];
+  keywordInsights?: KeywordInsights;
+}
+
 export const insightsService = {
   // Generate overall site insights
   generateInsights: async (request: InsightRequest): Promise<InsightResponse> => {
@@ -272,12 +288,18 @@ export const insightsService = {
       
       // Verify that the response has the expected structure
       if (response.data) {
-        if (!response.data.raw_data || !response.data.ai_analysis) {
+        // Use a type assertion to tell TypeScript that response.data should have these properties
+        const data = response.data as Partial<InsightResponse>;
+        
+        if (!data.raw_data || !data.ai_analysis) {
           console.warn('Response does not follow the expected format', response.data);
           
           // If the response doesn't have the expected structure, try to adapt it
-          if (!response.data.raw_data && !response.data.ai_analysis) {
-            // This might be an old format response
+          if (!data.raw_data && !data.ai_analysis) {
+            // This might be an old format response - cast to legacy format
+            const legacyData = response.data as LegacyInsightResponse;
+            
+            // Adapt the legacy format to the new format
             const adaptedResponse: InsightResponse = {
               success: true,
               raw_data: {
@@ -292,13 +314,13 @@ export const insightsService = {
                 time_period: period
               },
               ai_analysis: {
-                summary: response.data.summary || 'No summary available',
-                performance: response.data.performance || {
+                summary: legacyData.summary || 'No summary available',
+                performance: legacyData.performance || {
                   trend: 'stable',
                   details: 'No details available'
                 },
-                topFindings: response.data.topFindings || [],
-                recommendations: response.data.recommendations || []
+                topFindings: legacyData.topFindings || [],
+                recommendations: legacyData.recommendations || []
               }
             };
             return adaptedResponse;
@@ -306,7 +328,7 @@ export const insightsService = {
         }
       }
       
-      return response.data;
+      return response.data as InsightResponse;
     } catch (error) {
       console.error('Error getting insights:', error);
       throw error;
