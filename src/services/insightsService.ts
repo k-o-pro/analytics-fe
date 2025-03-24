@@ -266,9 +266,34 @@ export const insightsService = {
   // Function to get insights for a site or page
   async getInsights(siteUrl: string, period: string, targetPageUrl?: string, refreshData?: boolean): Promise<InsightResponse> {
     try {
-      const endpoint = targetPageUrl 
-        ? `/insights/page?url=${encodeURIComponent(targetPageUrl)}&mock=true` 
-        : '/insights?mock=true';
+      // Determine the endpoint based on whether this is a page insight or site insight
+      let endpoint;
+      
+      if (targetPageUrl) {
+        // For page insights, try to extract the path from URL
+        try {
+          const urlObj = new URL(targetPageUrl);
+          const pagePath = urlObj.pathname;
+          
+          // Use the page insights endpoint format from the backend
+          endpoint = `/insights/page/${encodeURIComponent(pagePath)}`;
+        } catch (urlError) {
+          // If URL parsing fails, just use the target page URL as is
+          console.warn('Failed to parse URL, using raw targetPageUrl instead:', urlError);
+          endpoint = `/insights/page/${encodeURIComponent(targetPageUrl)}`;
+        }
+        
+        // Add mock parameter if needed
+        endpoint += '?mock=true';
+      } else {
+        // For site-wide insights
+        endpoint = '/insights/generate?mock=true';
+      }
+      
+      // Add force parameter if refresh is requested
+      if (refreshData) {
+        endpoint += endpoint.includes('?') ? '&force=true' : '?force=true';
+      }
       
       const payload: InsightRequest = {
         siteUrl,
@@ -284,7 +309,12 @@ export const insightsService = {
         payload.refreshData = refreshData;
       }
 
+      console.log(`Making insights request to ${endpoint}`, payload);
       const response = await api.post(endpoint, payload);
+      
+      // Log the response for debugging
+      console.log('Insights API response status:', response.status);
+      console.log('Insights API response headers:', response.headers);
       
       // Verify that the response has the expected structure
       if (response.data) {
@@ -296,6 +326,7 @@ export const insightsService = {
           
           // If the response doesn't have the expected structure, try to adapt it
           if (!data.raw_data && !data.ai_analysis) {
+            console.log('Trying to adapt legacy format response');
             // This might be an old format response - cast to legacy format
             const legacyData = response.data as LegacyInsightResponse;
             
@@ -331,7 +362,8 @@ export const insightsService = {
       return response.data as InsightResponse;
     } catch (error) {
       console.error('Error getting insights:', error);
-      throw error;
+      // Rethrow with a clearer message
+      throw new Error(`Failed to get insights: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 };
